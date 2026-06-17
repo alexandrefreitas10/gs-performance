@@ -52,6 +52,9 @@ export default function TreinosPage() {
   const [filter, setFilter] = useState<Filter>('hoje')
   const [selectedDate, setSelectedDate] = useState(toLocalDateStr(new Date()))
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | null>(null)
+  const [assignOpen, setAssignOpen] = useState<number | null>(null)
+  const [assignees, setAssignees] = useState<Record<number, Athlete[]>>({})
+  const [assignLoading, setAssignLoading] = useState<number | null>(null)
 
   async function loadWorkouts(athleteId: number | null) {
     setLoading(true)
@@ -69,6 +72,35 @@ export default function TreinosPage() {
   useEffect(() => {
     loadWorkouts(selectedAthleteId)
   }, [selectedAthleteId])
+
+  async function toggleAssign(workoutId: number) {
+    if (assignOpen === workoutId) { setAssignOpen(null); return }
+    setAssignLoading(workoutId)
+    const res = await fetch(`/api/workouts/${workoutId}/assignments`)
+    const data = await res.json()
+    setAssignees(prev => ({ ...prev, [workoutId]: data }))
+    setAssignLoading(null)
+    setAssignOpen(workoutId)
+  }
+
+  async function handleAssign(workoutId: number, athleteId: number) {
+    await fetch(`/api/workouts/${workoutId}/assignments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userIds: [athleteId] }),
+    })
+    const res = await fetch(`/api/workouts/${workoutId}/assignments`)
+    setAssignees(prev => ({ ...prev, [workoutId]: await res.json() }))
+  }
+
+  async function handleUnassign(workoutId: number, athleteId: number) {
+    await fetch(`/api/workouts/${workoutId}/assignments`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: athleteId }),
+    })
+    setAssignees(prev => ({ ...prev, [workoutId]: prev[workoutId]?.filter(a => a.id !== athleteId) ?? [] }))
+  }
 
   async function handleDelete(id: number, title: string) {
     if (!confirm(`Excluir "${title}"?`)) return
@@ -199,11 +231,43 @@ export default function TreinosPage() {
                   <Link href={`/treinos/${w.id}`} className="px-3 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">
                     Ver
                   </Link>
+                  <button
+                    onClick={() => toggleAssign(w.id)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${assignOpen === w.id ? 'bg-orange-500 text-white' : 'bg-zinc-800 text-orange-400 hover:bg-zinc-700'}`}
+                  >
+                    {assignLoading === w.id ? '...' : 'Atribuir'}
+                  </button>
                   <button onClick={() => handleDelete(w.id, w.title)} className="px-3 py-1.5 text-xs font-semibold text-red-400 bg-zinc-800 hover:bg-red-950 rounded-lg transition-colors">
                     Excluir
                   </button>
                 </div>
               </div>
+
+              {assignOpen === w.id && (
+                <div className="mt-4 border-t border-zinc-800 pt-4">
+                  <p className="text-xs font-semibold text-zinc-400 mb-3">Atletas atribuídos</p>
+                  <div className="space-y-2">
+                    {athletes.map(a => {
+                      const assigned = assignees[w.id]?.some(x => x.id === a.id) ?? false
+                      return (
+                        <label key={a.id} className="flex items-center justify-between gap-3 cursor-pointer group">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={assigned}
+                              onChange={() => assigned ? handleUnassign(w.id, a.id) : handleAssign(w.id, a.id)}
+                              className="accent-orange-500 w-4 h-4"
+                            />
+                            <span className="text-white text-sm">{a.name}</span>
+                            <span className="text-zinc-500 text-xs">@{a.username}</span>
+                          </div>
+                          {assigned && <span className="text-xs text-green-400 font-semibold">✓ Atribuído</span>}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
