@@ -37,7 +37,18 @@ export async function listWorkouts(): Promise<Omit<Workout, 'parts'>[]> {
   await initSchema()
   return sql<Omit<Workout, 'parts'>[]>`
     SELECT id, title, date, notes, created_by, created_at
-    FROM workouts ORDER BY created_at DESC
+    FROM workouts ORDER BY date DESC NULLS LAST, created_at DESC
+  `
+}
+
+export async function listWorkoutsByAthlete(athleteId: number): Promise<Omit<Workout, 'parts'>[]> {
+  await initSchema()
+  return sql<Omit<Workout, 'parts'>[]>`
+    SELECT w.id, w.title, w.date, w.notes, w.created_by, w.created_at
+    FROM workouts w
+    JOIN workout_assignments wa ON wa.workout_id = w.id
+    WHERE wa.user_id = ${athleteId}
+    ORDER BY w.date DESC NULLS LAST, w.created_at DESC
   `
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 
 interface Workout {
@@ -11,83 +11,195 @@ interface Workout {
   created_at: string
 }
 
+interface Athlete {
+  id: number
+  name: string
+  username: string
+}
+
+type Filter = 'hoje' | 'semana' | 'data' | 'todos'
+
+function toLocalDateStr(date: Date) {
+  return date.toISOString().split('T')[0]
+}
+
+function startOfWeek(date: Date) {
+  const d = new Date(date)
+  const day = d.getDay()
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1))
+  return toLocalDateStr(d)
+}
+
+function endOfWeek(date: Date) {
+  const d = new Date(date)
+  const day = d.getDay()
+  d.setDate(d.getDate() + (day === 0 ? 0 : 7 - day))
+  return toLocalDateStr(d)
+}
+
+function formatDate(d: string | null) {
+  if (!d) return null
+  const dateStr = d.includes('T') ? d : d + 'T12:00:00'
+  const parsed = new Date(dateStr)
+  if (isNaN(parsed.getTime())) return null
+  return parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
 export default function TreinosPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
+  const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<Filter>('hoje')
+  const [selectedDate, setSelectedDate] = useState(toLocalDateStr(new Date()))
+  const [selectedAthleteId, setSelectedAthleteId] = useState<number | null>(null)
 
-  async function load() {
-    const res = await fetch('/api/workouts')
+  async function loadWorkouts(athleteId: number | null) {
+    setLoading(true)
+    const url = athleteId ? `/api/workouts?athleteId=${athleteId}` : '/api/workouts'
+    const res = await fetch(url)
     setWorkouts(await res.json())
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    fetch('/api/athletes').then(r => r.json()).then(setAthletes)
+    loadWorkouts(null)
+  }, [])
+
+  useEffect(() => {
+    loadWorkouts(selectedAthleteId)
+  }, [selectedAthleteId])
 
   async function handleDelete(id: number, title: string) {
     if (!confirm(`Excluir "${title}"?`)) return
     await fetch(`/api/workouts/${id}`, { method: 'DELETE' })
-    load()
+    loadWorkouts(selectedAthleteId)
   }
 
-  function formatDate(d: string | null) {
-    if (!d) return null
-    const dateStr = d.includes('T') ? d : d + 'T12:00:00'
-    const parsed = new Date(dateStr)
-    if (isNaN(parsed.getTime())) return null
-    return parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
-  }
+  const filtered = useMemo(() => {
+    const today = toLocalDateStr(new Date())
+    if (filter === 'hoje') return workouts.filter(w => {
+      const d = w.date?.includes('T') ? w.date.split('T')[0] : w.date
+      return d === today
+    })
+    if (filter === 'semana') {
+      const start = startOfWeek(new Date())
+      const end = endOfWeek(new Date())
+      return workouts.filter(w => {
+        const d = w.date?.includes('T') ? w.date.split('T')[0] : w.date
+        return d && d >= start && d <= end
+      })
+    }
+    if (filter === 'data') return workouts.filter(w => {
+      const d = w.date?.includes('T') ? w.date.split('T')[0] : w.date
+      return d === selectedDate
+    })
+    return workouts
+  }, [workouts, filter, selectedDate])
+
+  const tabs: { key: Filter; label: string }[] = [
+    { key: 'hoje', label: 'Hoje' },
+    { key: 'semana', label: 'Esta semana' },
+    { key: 'data', label: 'Escolher data' },
+    { key: 'todos', label: 'Todos' },
+  ]
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-white">Treinos</h1>
-          <p className="text-zinc-400 text-sm mt-1">{workouts.length} treino{workouts.length !== 1 ? 's' : ''}</p>
+          <p className="text-zinc-400 text-sm mt-1">{filtered.length} treino{filtered.length !== 1 ? 's' : ''}</p>
         </div>
-        <Link
-          href="/treinos/novo"
-          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-sm transition-colors"
-        >
+        <Link href="/treinos/novo" className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-sm transition-colors">
           + Novo treino
         </Link>
       </div>
 
+      {/* Seletor de atleta */}
+      <div className="mb-4">
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setSelectedAthleteId(null)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+              selectedAthleteId === null ? 'bg-orange-500 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'
+            }`}
+          >
+            Todos os atletas
+          </button>
+          {athletes.map(a => (
+            <button
+              key={a.id}
+              onClick={() => setSelectedAthleteId(a.id)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                selectedAthleteId === a.id ? 'bg-orange-500 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'
+              }`}
+            >
+              {a.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Filtros de data */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {tabs.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setFilter(t.key)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+              filter === t.key ? 'bg-zinc-200 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:text-white'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {filter === 'data' && (
+        <div className="mb-5">
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={e => setSelectedDate(e.target.value)}
+            className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+          />
+        </div>
+      )}
+
       {loading ? (
         <p className="text-zinc-500 text-sm text-center py-12">Carregando...</p>
-      ) : workouts.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center">
-          <p className="text-zinc-500 text-sm">Nenhum treino cadastrado ainda.</p>
-          <Link href="/treinos/novo" className="mt-4 inline-block text-orange-400 hover:text-orange-300 text-sm font-semibold">
-            Criar primeiro treino →
-          </Link>
+          <p className="text-zinc-500 text-sm">
+            {filter === 'hoje' && 'Nenhum treino para hoje.'}
+            {filter === 'semana' && 'Nenhum treino nesta semana.'}
+            {filter === 'data' && 'Nenhum treino nesta data.'}
+            {filter === 'todos' && 'Nenhum treino cadastrado ainda.'}
+          </p>
+          {filter === 'todos' && (
+            <Link href="/treinos/novo" className="mt-4 inline-block text-orange-400 hover:text-orange-300 text-sm font-semibold">
+              Criar primeiro treino →
+            </Link>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
-          {workouts.map(w => (
+          {filtered.map(w => (
             <div key={w.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
               <div className="flex items-start justify-between">
                 <div>
                   <Link href={`/treinos/${w.id}`} className="text-white font-bold hover:text-orange-400 transition-colors">
                     {w.title}
                   </Link>
-                  {w.date && (
-                    <p className="text-orange-400 text-xs font-semibold mt-0.5">{formatDate(w.date)}</p>
-                  )}
-                  {w.notes && (
-                    <p className="text-zinc-500 text-xs mt-1 line-clamp-1">{w.notes}</p>
-                  )}
+                  {w.date && <p className="text-orange-400 text-xs font-semibold mt-0.5">{formatDate(w.date)}</p>}
+                  {w.notes && <p className="text-zinc-500 text-xs mt-1 line-clamp-1">{w.notes}</p>}
                 </div>
                 <div className="flex gap-2 ml-4 shrink-0">
-                  <Link
-                    href={`/treinos/${w.id}`}
-                    className="px-3 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
-                  >
+                  <Link href={`/treinos/${w.id}`} className="px-3 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">
                     Ver
                   </Link>
-                  <button
-                    onClick={() => handleDelete(w.id, w.title)}
-                    className="px-3 py-1.5 text-xs font-semibold text-red-400 bg-zinc-800 hover:bg-red-950 rounded-lg transition-colors"
-                  >
+                  <button onClick={() => handleDelete(w.id, w.title)} className="px-3 py-1.5 text-xs font-semibold text-red-400 bg-zinc-800 hover:bg-red-950 rounded-lg transition-colors">
                     Excluir
                   </button>
                 </div>

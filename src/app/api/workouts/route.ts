@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { listWorkouts, createWorkout } from '@/lib/workouts'
+import { listWorkouts, listWorkoutsByAthlete, createWorkout } from '@/lib/workouts'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-  const workouts = await listWorkouts()
+  const { searchParams } = new URL(req.url)
+  const athleteId = searchParams.get('athleteId')
+  const workouts = athleteId ? await listWorkoutsByAthlete(Number(athleteId)) : await listWorkouts()
   return NextResponse.json(workouts)
 }
 
