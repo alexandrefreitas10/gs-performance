@@ -1,8 +1,18 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/auth'
+'use client'
 
-export default async function Home() {
-  const session = await auth()
-  if (!session) redirect('/login')
-  redirect('/dashboard')
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+
+export default function Home() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'loading') return
+    if (session) router.push('/dashboard')
+    else router.push('/login')
+  }, [session, status, router])
+
+  return null
 }
