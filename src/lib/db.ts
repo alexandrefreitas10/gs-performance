@@ -98,6 +98,7 @@ export async function initSchema() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
     ALTER TABLE workout_parts ADD COLUMN IF NOT EXISTS scoring_type TEXT DEFAULT '';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT DEFAULT '';
     ALTER TABLE athlete_results ADD COLUMN IF NOT EXISTS video_s3_key TEXT DEFAULT '';
     ALTER TABLE athlete_results ADD COLUMN IF NOT EXISTS video_name TEXT DEFAULT '';
     ALTER TABLE athlete_results ADD COLUMN IF NOT EXISTS admin_feedback TEXT DEFAULT '';

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { deleteUser, updateUserPassword } from '@/lib/users'
+import { deleteUser, updateUserPassword, updateUserGender } from '@/lib/users'
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -18,10 +18,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
   const { id } = await params
-  const { password } = await req.json()
-  if (!password) {
-    return NextResponse.json({ error: 'Senha obrigatória' }, { status: 400 })
+  const body = await req.json()
+  if (body.password) {
+    await updateUserPassword(Number(id), body.password)
+  } else if (body.gender !== undefined) {
+    await updateUserGender(Number(id), body.gender)
+  } else {
+    return NextResponse.json({ error: 'Nenhum campo para atualizar' }, { status: 400 })
   }
-  await updateUserPassword(Number(id), password)
   return NextResponse.json({ ok: true })
 }

@@ -18,6 +18,7 @@ export async function GET() {
       wp.scoring_type,
       u.id as user_id,
       u.name as athlete_name,
+      u.gender as athlete_gender,
       ar.result_value,
       ar.rpe,
       ar.completed,

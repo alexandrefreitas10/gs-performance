@@ -8,6 +8,7 @@ export interface User {
   name: string
   is_admin: boolean
   group_id: number | null
+  gender: string
   created_at: string
 }
 
@@ -49,9 +50,14 @@ export async function createUser(
 export async function listAthletes(): Promise<Omit<User, 'password_hash'>[]> {
   await initSchema()
   return sql<Omit<User, 'password_hash'>[]>`
-    SELECT id, username, name, is_admin, group_id, created_at
+    SELECT id, username, name, is_admin, group_id, gender, created_at
     FROM users WHERE is_admin = FALSE ORDER BY name
   `
+}
+
+export async function updateUserGender(id: number, gender: string): Promise<void> {
+  await initSchema()
+  await sql`UPDATE users SET gender = ${gender} WHERE id = ${id}`
 }
 
 export async function updateUserPassword(id: number, password: string): Promise<void> {

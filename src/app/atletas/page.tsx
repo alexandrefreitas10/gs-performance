@@ -7,6 +7,7 @@ interface Athlete {
   id: number
   username: string
   name: string
+  gender: string
   created_at: string
 }
 
@@ -64,6 +65,15 @@ export default function AtletasPage() {
     setNewPassword('')
   }
 
+  async function handleGenderChange(id: number, gender: string) {
+    await fetch(`/api/athletes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gender }),
+    })
+    setAthletes(prev => prev.map(a => a.id === id ? { ...a, gender } : a))
+  }
+
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
@@ -118,7 +128,25 @@ export default function AtletasPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white font-semibold">{a.name}</p>
-                  <p className="text-zinc-500 text-xs mt-0.5">@{a.username}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-zinc-500 text-xs">@{a.username}</p>
+                    <div className="flex gap-1">
+                      {(['M', 'F', ''] as const).map(g => (
+                        <button
+                          key={g}
+                          onClick={() => handleGenderChange(a.id, g)}
+                          className={`px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${
+                            a.gender === g && g !== ''
+                              ? g === 'M' ? 'bg-blue-500/30 text-blue-400 border border-blue-500/50' : 'bg-pink-500/30 text-pink-400 border border-pink-500/50'
+                              : 'bg-zinc-800 text-zinc-500 hover:text-zinc-300'
+                          }`}
+                          title={g === 'M' ? 'Masculino' : g === 'F' ? 'Feminino' : 'Sem gênero'}
+                        >
+                          {g === 'M' ? '♂' : g === 'F' ? '♀' : '—'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button

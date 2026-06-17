@@ -11,6 +11,7 @@ interface Row {
   scoring_type: string
   user_id: number
   athlete_name: string
+  athlete_gender: string
   result_value: string
   rpe: number | null
   completed: boolean
@@ -60,6 +61,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true)
   const [selectedWorkout, setSelectedWorkout] = useState<number | null>(null)
   const [selectedPart, setSelectedPart] = useState<number | null>(null)
+  const [genderFilter, setGenderFilter] = useState<'all' | 'M' | 'F'>('all')
 
   useEffect(() => {
     fetch('/api/leaderboard')
@@ -146,10 +148,32 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+      {/* Filtro de gênero */}
+      <div className="flex gap-2 mb-6">
+        {([['all', 'Todos'], ['M', 'Homens'], ['F', 'Mulheres']] as const).map(([val, label]) => (
+          <button
+            key={val}
+            onClick={() => setGenderFilter(val)}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+              genderFilter === val
+                ? 'bg-orange-500 text-white'
+                : 'bg-zinc-800 text-zinc-400 hover:text-white'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {/* Ranking da parte selecionada */}
       <div className="space-y-6">
         {parts.filter(part => !selectedPart || part.part_id === selectedPart).map(part => {
-          const partRows = rows.filter(r => r.part_id === part.part_id)
+          const partRows = rows.filter(r => {
+            if (r.part_id !== part.part_id) return false
+            if (genderFilter === 'M') return r.athlete_gender === 'M'
+            if (genderFilter === 'F') return r.athlete_gender === 'F'
+            return true
+          })
           const ranked = rankAthletes(partRows, part.scoring_type)
 
           return (
