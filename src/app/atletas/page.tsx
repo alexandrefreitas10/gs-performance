@@ -168,7 +168,7 @@ export default function AtletasPage() {
         <div className="space-y-3">
           {athletes.map(a => (
             <div key={a.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-white font-semibold">{a.name}</p>
@@ -182,7 +182,7 @@ export default function AtletasPage() {
                     {a.phone && <span className="text-zinc-500 text-xs">{a.phone}</span>}
                   </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+                <div className="flex gap-2 flex-wrap sm:justify-end">
                   <button onClick={() => router.push(`/atletas/${a.id}/benchmarks`)} className="px-3 py-1.5 text-xs font-semibold text-orange-400 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">Benchmarks</button>
                   <button onClick={() => router.push(`/atletas/${a.id}/objetivos`)} className="px-3 py-1.5 text-xs font-semibold text-orange-400 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">Objetivos</button>
                   <button onClick={() => editId === a.id ? setEditId(null) : openEdit(a)} className="px-3 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">
