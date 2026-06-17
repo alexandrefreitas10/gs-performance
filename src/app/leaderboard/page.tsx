@@ -49,7 +49,10 @@ function rankAthletes(rows: Row[], scoringType: string) {
 
 function formatDate(d: string | null) {
   if (!d) return null
-  return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+  const dateStr = d.includes('T') ? d : d + 'T12:00:00'
+  const parsed = new Date(dateStr)
+  if (isNaN(parsed.getTime())) return null
+  return parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
 export default function LeaderboardPage() {
