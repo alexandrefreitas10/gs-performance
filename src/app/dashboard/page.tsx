@@ -1,36 +1,33 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import Link from 'next/link'
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (status === 'unauthenticated') router.push('/login')
-  }, [status, router])
 
   if (status === 'loading') return (
     <main className="max-w-4xl mx-auto px-4 py-8">
-      <p className="text-zinc-500">Carregando...</p>
+      <p className="text-zinc-500 text-sm">Carregando sessão...</p>
     </main>
   )
 
-  if (!session) return null
+  if (status === 'unauthenticated' || !session) return (
+    <main className="max-w-4xl mx-auto px-4 py-8">
+      <p className="text-zinc-500 text-sm">Sessão não encontrada. <Link href="/login" className="text-orange-400 underline">Fazer login</Link></p>
+    </main>
+  )
 
-  const isAdmin = (session.user as any).is_admin
+  const isAdmin = (session.user as any)?.is_admin === true
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-black text-white">
-          Olá, {session.user?.name}
+          Olá, {session.user?.name ?? 'Usuário'}
         </h1>
         <p className="text-zinc-400 text-sm mt-1">
-          {isAdmin ? 'Painel do Administrador' : 'Seus treinos de hoje'}
+          {isAdmin ? 'Painel do Administrador' : 'Área do atleta'}
         </p>
       </div>
 
