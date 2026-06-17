@@ -397,13 +397,46 @@ export default function WorkoutDetailPage() {
                     <p className="text-white text-sm font-bold">Seu resultado</p>
 
                     <div>
-                      <label className="text-xs text-zinc-400 block mb-1">Resultado (tempo, rounds, peso...)</label>
-                      <input
-                        value={drafts[part.id].result_value}
-                        onChange={e => setDrafts(prev => ({ ...prev, [part.id]: { ...prev[part.id], result_value: e.target.value } }))}
-                        placeholder="Ex: 18:42 / 5 rounds / 80kg"
-                        className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
+                      {part.scoring_type === 'menor_tempo' ? (
+                        <>
+                          <label className="text-xs text-zinc-400 block mb-1">Tempo (mm:ss)</label>
+                          <input
+                            value={drafts[part.id].result_value}
+                            onChange={e => {
+                              let v = e.target.value.replace(/[^\d:]/g, '')
+                              if (/^\d{3,}$/.test(v) && !v.includes(':')) {
+                                v = v.slice(0, -2) + ':' + v.slice(-2)
+                              }
+                              setDrafts(prev => ({ ...prev, [part.id]: { ...prev[part.id], result_value: v } }))
+                            }}
+                            placeholder="Ex: 18:42"
+                            inputMode="numeric"
+                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
+                          />
+                        </>
+                      ) : part.scoring_type === 'max_reps' ? (
+                        <>
+                          <label className="text-xs text-zinc-400 block mb-1">Repetições</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={drafts[part.id].result_value}
+                            onChange={e => setDrafts(prev => ({ ...prev, [part.id]: { ...prev[part.id], result_value: e.target.value } }))}
+                            placeholder="Ex: 42"
+                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <label className="text-xs text-zinc-400 block mb-1">Resultado</label>
+                          <input
+                            value={drafts[part.id].result_value}
+                            onChange={e => setDrafts(prev => ({ ...prev, [part.id]: { ...prev[part.id], result_value: e.target.value } }))}
+                            placeholder={part.scoring_type === 'maior_carga' ? 'Ex: 120 lbs' : 'Ex: 5 rounds / 120 lbs'}
+                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </>
+                      )}
                     </div>
 
                     <div>
