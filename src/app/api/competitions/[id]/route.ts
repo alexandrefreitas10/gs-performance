@@ -10,12 +10,12 @@ export async function PUT(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   const { id } = await params
-  const { name, date, location, notes } = await req.json()
+  const { name, date, end_date, location, notes } = await req.json()
   if (!name?.trim() || !date) {
-    return NextResponse.json({ error: 'Nome e data são obrigatórios' }, { status: 400 })
+    return NextResponse.json({ error: 'Nome e data de início são obrigatórios' }, { status: 400 })
   }
   const rows = await sql`
-    UPDATE competitions SET name = ${name.trim()}, date = ${date}, location = ${location ?? ''}, notes = ${notes ?? ''}
+    UPDATE competitions SET name = ${name.trim()}, date = ${date}, end_date = ${end_date ?? null}, location = ${location ?? ''}, notes = ${notes ?? ''}
     WHERE id = ${id} RETURNING *
   `
   return NextResponse.json(rows[0])

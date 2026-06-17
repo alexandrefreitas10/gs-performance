@@ -7,11 +7,12 @@ interface Competition {
   id: number
   name: string
   date: string
+  end_date: string | null
   location: string
   notes: string
 }
 
-const EMPTY_FORM = { name: '', date: '', location: '', notes: '' }
+const EMPTY_FORM = { name: '', date: '', end_date: '', location: '', notes: '' }
 
 function formatDate(d: string) {
   const dateStr = d.includes('T') ? d : d + 'T12:00:00'
@@ -20,9 +21,17 @@ function formatDate(d: string) {
   return parsed.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 }
 
-function isPast(d: string) {
-  const dateStr = d.includes('T') ? d : d + 'T23:59:59'
+function isPast(c: Competition) {
+  const ref = c.end_date ?? c.date
+  const dateStr = ref.includes('T') ? ref : ref + 'T23:59:59'
   return new Date(dateStr) < new Date()
+}
+
+function formatDateRange(start: string, end: string | null) {
+  const s = formatDate(start)
+  if (!end) return s
+  const e = formatDate(end)
+  return `${s} → ${e}`
 }
 
 export default function CalendarioPage() {
@@ -51,7 +60,7 @@ export default function CalendarioPage() {
 
   function openEdit(c: Competition) {
     setEditing(c)
-    setForm({ name: c.name, date: c.date.slice(0, 10), location: c.location, notes: c.notes })
+    setForm({ name: c.name, date: c.date.slice(0, 10), end_date: c.end_date ? c.end_date.slice(0, 10) : '', location: c.location, notes: c.notes })
     setShowForm(true)
   }
 
@@ -82,8 +91,8 @@ export default function CalendarioPage() {
     load()
   }
 
-  const upcoming = competitions.filter(c => !isPast(c.date))
-  const past = competitions.filter(c => isPast(c.date))
+  const upcoming = competitions.filter(c => !isPast(c))
+  const past = competitions.filter(c => isPast(c))
 
   if (status === 'loading' || loading) {
     return <main className="min-h-screen bg-zinc-950 flex items-center justify-center"><p className="text-zinc-400">Carregando...</p></main>
@@ -121,15 +130,26 @@ export default function CalendarioPage() {
               required
             />
           </div>
-          <div>
-            <label className="text-xs font-semibold text-zinc-400 block mb-1.5">Data</label>
-            <input
-              type="date"
-              value={form.date}
-              onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
-              className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              required
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-zinc-400 block mb-1.5">Data de início</label>
+              <input
+                type="date"
+                value={form.date}
+                onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+                className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-zinc-400 block mb-1.5">Data de término</label>
+              <input
+                type="date"
+                value={form.end_date}
+                onChange={e => setForm(p => ({ ...p, end_date: e.target.value }))}
+                className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
           </div>
           <div>
             <label className="text-xs font-semibold text-zinc-400 block mb-1.5">Local</label>
@@ -180,7 +200,7 @@ export default function CalendarioPage() {
                         <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
                         <h2 className="text-white font-bold">{c.name}</h2>
                       </div>
-                      <p className="text-orange-400 text-sm font-semibold ml-4">{formatDate(c.date)}</p>
+                      <p className="text-orange-400 text-sm font-semibold ml-4">{formatDateRange(c.date, c.end_date)}</p>
                       {c.location && <p className="text-zinc-400 text-xs mt-1 ml-4">📍 {c.location}</p>}
                       {c.notes && <p className="text-zinc-500 text-xs mt-2 ml-4">{c.notes}</p>}
                     </div>
@@ -205,7 +225,7 @@ export default function CalendarioPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <h2 className="text-zinc-400 font-semibold text-sm">{c.name}</h2>
-                        <p className="text-zinc-600 text-xs mt-0.5">{formatDate(c.date)}</p>
+                        <p className="text-zinc-600 text-xs mt-0.5">{formatDateRange(c.date, c.end_date)}</p>
                         {c.location && <p className="text-zinc-600 text-xs mt-0.5">📍 {c.location}</p>}
                       </div>
                       {isAdmin && (

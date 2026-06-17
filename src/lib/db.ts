@@ -88,6 +88,7 @@ export async function initSchema() {
       notes TEXT DEFAULT '',
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS end_date DATE;
     ALTER TABLE workout_parts ADD COLUMN IF NOT EXISTS scoring_type TEXT DEFAULT '';
     ALTER TABLE benchmarks ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';
     DO $$ BEGIN

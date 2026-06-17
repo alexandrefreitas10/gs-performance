@@ -14,13 +14,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   await initSchema()
-  const { name, date, location, notes } = await req.json()
+  const { name, date, end_date, location, notes } = await req.json()
   if (!name?.trim() || !date) {
-    return NextResponse.json({ error: 'Nome e data são obrigatórios' }, { status: 400 })
+    return NextResponse.json({ error: 'Nome e data de início são obrigatórios' }, { status: 400 })
   }
   const rows = await sql`
-    INSERT INTO competitions (name, date, location, notes)
-    VALUES (${name.trim()}, ${date}, ${location ?? ''}, ${notes ?? ''})
+    INSERT INTO competitions (name, date, end_date, location, notes)
+    VALUES (${name.trim()}, ${date}, ${end_date ?? null}, ${location ?? ''}, ${notes ?? ''})
     RETURNING *
   `
   return NextResponse.json(rows[0])
