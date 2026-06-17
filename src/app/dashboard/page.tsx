@@ -2,9 +2,21 @@
 
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status !== 'authenticated' || !session) return
+    const isAdmin = (session.user as any)?.is_admin === true
+    if (isAdmin) return
+    fetch('/api/benchmarks/check')
+      .then(r => r.json())
+      .then(({ filled }) => { if (!filled) router.push('/setup-benchmarks') })
+  }, [status, session])
 
   if (status === 'loading') return (
     <main className="max-w-4xl mx-auto px-4 py-8">

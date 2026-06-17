@@ -122,6 +122,12 @@ export default function AtletasPage() {
                 </div>
                 <div className="flex gap-2">
                   <button
+                    onClick={() => router.push(`/atletas/${a.id}/benchmarks`)}
+                    className="px-3 py-1.5 text-xs font-semibold text-orange-400 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+                  >
+                    Benchmarks
+                  </button>
+                  <button
                     onClick={() => { setResetId(a.id); setNewPassword('') }}
                     className="px-3 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
                   >

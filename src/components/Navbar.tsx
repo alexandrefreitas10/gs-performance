@@ -25,6 +25,7 @@ export default function Navbar() {
           {!isAdmin && (
             <div className="flex items-center gap-3">
               <Link href="/meus-treinos" className="text-zinc-400 hover:text-white text-sm transition-colors">Meus Treinos</Link>
+              <Link href="/meus-benchmarks" className="text-zinc-400 hover:text-white text-sm transition-colors">Benchmarks</Link>
               <Link href="/leaderboard" className="text-zinc-400 hover:text-white text-sm transition-colors">Leaderboard</Link>
             </div>
           )}

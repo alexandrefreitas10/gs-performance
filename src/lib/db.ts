@@ -81,6 +81,14 @@ export async function initSchema() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
     ALTER TABLE workout_parts ADD COLUMN IF NOT EXISTS scoring_type TEXT DEFAULT '';
+    ALTER TABLE benchmarks ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';
+    DO $$ BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'benchmarks_user_id_benchmark_name_key'
+      ) THEN
+        ALTER TABLE benchmarks ADD CONSTRAINT benchmarks_user_id_benchmark_name_key UNIQUE (user_id, benchmark_name);
+      END IF;
+    END $$;
   `) } catch (e) { console.error('initSchema error:', e) }
 }
 
