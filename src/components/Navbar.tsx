@@ -31,7 +31,7 @@ export default function Navbar() {
           <div className="flex items-center gap-3 border-l border-zinc-800 pl-4">
             <span className="text-zinc-500 text-sm">{session?.user?.name}</span>
             <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
+              onClick={() => signOut({ redirectTo: '/login' })}
               className="px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
             >
               Sair

@@ -42,7 +42,8 @@ export default function MeusTreinosPage() {
   useEffect(() => {
     fetch('/api/meus-treinos')
       .then(r => r.json())
-      .then(d => { setWorkouts(d); setLoading(false) })
+      .then(d => { setWorkouts(Array.isArray(d) ? d : []); setLoading(false) })
+      .catch(() => { setWorkouts([]); setLoading(false) })
   }, [])
 
   const filtered = useMemo(() => {

@@ -5,7 +5,11 @@ const sql = postgres(process.env.DATABASE_URL!, {
   max: 10,
 })
 
+let schemaInitialized = false
+
 export async function initSchema() {
+  if (schemaInitialized) return
+  schemaInitialized = true
   await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
