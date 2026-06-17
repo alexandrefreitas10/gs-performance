@@ -43,9 +43,13 @@ interface Result {
   rpe: number | null
   result_value: string
   notes: string
+  video_s3_key: string
+  video_name: string
+  admin_feedback: string
 }
 
 interface AdminResult {
+  id: number
   part_id: number
   part_title: string
   athlete_name: string
@@ -53,6 +57,9 @@ interface AdminResult {
   rpe: number | null
   result_value: string
   notes: string
+  video_s3_key: string
+  video_name: string
+  admin_feedback: string
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -108,6 +115,10 @@ export default function WorkoutDetailPage() {
   const [drafts, setDrafts] = useState<Record<number, { result_value: string; rpe: number | null; notes: string; completed: boolean }>>({})
   const [saving, setSaving] = useState<Record<number, boolean>>({})
   const [saved, setSaved] = useState<Record<number, boolean>>({})
+  const [uploadingVideo, setUploadingVideo] = useState<Record<number, boolean>>({})
+  const [deletingVideo, setDeletingVideo] = useState<Record<number, boolean>>({})
+  const [feedbackDrafts, setFeedbackDrafts] = useState<Record<number, string>>({})
+  const [savingFeedback, setSavingFeedback] = useState<Record<number, boolean>>({})
 
   useEffect(() => {
     fetch(`/api/workouts/${id}`)
@@ -162,6 +173,45 @@ export default function WorkoutDetailPage() {
       setTimeout(() => setSaved(prev => ({ ...prev, [partId]: false })), 2000)
     }
     setSaving(prev => ({ ...prev, [partId]: false }))
+  }
+
+  async function handleVideoUpload(partId: number, file: File) {
+    const result = myResults[partId]
+    if (!result) return
+    setUploadingVideo(prev => ({ ...prev, [partId]: true }))
+    const formData = new FormData()
+    formData.append('video', file)
+    const res = await fetch(`/api/results/${result.id}/video`, { method: 'POST', body: formData })
+    if (res.ok) {
+      setMyResults(prev => ({ ...prev, [partId]: { ...prev[partId], video_s3_key: 'uploaded', video_name: file.name } }))
+    }
+    setUploadingVideo(prev => ({ ...prev, [partId]: false }))
+  }
+
+  async function handleVideoDelete(partId: number) {
+    const result = myResults[partId]
+    if (!result) return
+    setDeletingVideo(prev => ({ ...prev, [partId]: true }))
+    await fetch(`/api/results/${result.id}/video`, { method: 'DELETE' })
+    setMyResults(prev => ({ ...prev, [partId]: { ...prev[partId], video_s3_key: '', video_name: '' } }))
+    setDeletingVideo(prev => ({ ...prev, [partId]: false }))
+  }
+
+  async function handleVideoDownload(resultId: number, mode: 'view' | 'download') {
+    const res = await fetch(`/api/results/${resultId}/video?mode=${mode}`)
+    const { url } = await res.json()
+    window.open(url, '_blank')
+  }
+
+  async function handleFeedbackSave(resultId: number) {
+    setSavingFeedback(prev => ({ ...prev, [resultId]: true }))
+    await fetch(`/api/results/${resultId}/feedback`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feedback: feedbackDrafts[resultId] ?? '' }),
+    })
+    setAdminResults(prev => prev.map(r => r.id === resultId ? { ...r, admin_feedback: feedbackDrafts[resultId] ?? '' } : r))
+    setSavingFeedback(prev => ({ ...prev, [resultId]: false }))
   }
 
   async function handleAssign() {
@@ -354,6 +404,38 @@ export default function WorkoutDetailPage() {
                     </button>
                   </div>
                 )}
+
+                {/* Vídeo */}
+                {myResults[part.id] && (
+                  <div className="mt-4 border-t border-zinc-800 pt-4">
+                    <p className="text-xs font-semibold text-zinc-400 mb-2">📹 Vídeo do movimento</p>
+                    {myResults[part.id].video_s3_key ? (
+                      <div className="bg-zinc-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                        <span className="text-zinc-300 text-xs truncate">{myResults[part.id].video_name || 'Vídeo enviado'}</span>
+                        <div className="flex gap-2 shrink-0">
+                          <button onClick={() => handleVideoDownload(myResults[part.id].id, 'view')} className="text-xs text-blue-400 hover:text-blue-300 font-semibold">Assistir</button>
+                          <button onClick={() => handleVideoDownload(myResults[part.id].id, 'download')} className="text-xs text-zinc-400 hover:text-white font-semibold">Baixar</button>
+                          <button onClick={() => handleVideoDelete(part.id)} disabled={deletingVideo[part.id]} className="text-xs text-red-400 hover:text-red-300 font-semibold disabled:opacity-50">
+                            {deletingVideo[part.id] ? '...' : 'Excluir'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className={`flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-zinc-700 rounded-xl cursor-pointer hover:border-orange-500 transition-colors ${uploadingVideo[part.id] ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <input type="file" accept="video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleVideoUpload(part.id, f) }} />
+                        <span className="text-zinc-400 text-sm">{uploadingVideo[part.id] ? 'Enviando...' : '+ Enviar vídeo'}</span>
+                      </label>
+                    )}
+                  </div>
+                )}
+
+                {/* Feedback do admin */}
+                {myResults[part.id]?.admin_feedback && (
+                  <div className="mt-3 bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-3">
+                    <p className="text-xs font-semibold text-orange-400 mb-1">💬 Feedback do Guilherme</p>
+                    <p className="text-zinc-300 text-sm whitespace-pre-wrap">{myResults[part.id].admin_feedback}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -377,6 +459,34 @@ export default function WorkoutDetailPage() {
                 <p className="text-zinc-400 text-xs">{r.part_title}</p>
                 {r.result_value && <p className="text-white text-sm mt-1 font-mono">{r.result_value}</p>}
                 {r.notes && <p className="text-zinc-500 text-xs mt-0.5 italic">{r.notes}</p>}
+
+                {/* Vídeo do atleta */}
+                {r.video_s3_key && (
+                  <div className="mt-2 flex gap-3">
+                    <span className="text-zinc-500 text-xs">📹</span>
+                    <button onClick={() => handleVideoDownload(r.id, 'view')} className="text-xs text-blue-400 hover:text-blue-300 font-semibold">Assistir vídeo</button>
+                    <button onClick={() => handleVideoDownload(r.id, 'download')} className="text-xs text-zinc-400 hover:text-white font-semibold">Baixar</button>
+                  </div>
+                )}
+
+                {/* Feedback do admin */}
+                <div className="mt-3 border-t border-zinc-700 pt-3">
+                  <p className="text-xs text-zinc-500 mb-1">💬 Seu feedback</p>
+                  <textarea
+                    rows={2}
+                    value={feedbackDrafts[r.id] ?? r.admin_feedback ?? ''}
+                    onChange={e => setFeedbackDrafts(prev => ({ ...prev, [r.id]: e.target.value }))}
+                    placeholder="Escreva um feedback sobre o movimento..."
+                    className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder:text-zinc-500"
+                  />
+                  <button
+                    onClick={() => handleFeedbackSave(r.id)}
+                    disabled={savingFeedback[r.id]}
+                    className="mt-1.5 px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg disabled:opacity-50 transition-colors"
+                  >
+                    {savingFeedback[r.id] ? 'Salvando...' : 'Salvar feedback'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
