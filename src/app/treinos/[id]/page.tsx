@@ -19,6 +19,7 @@ interface Part {
   type: string
   description: string
   time_cap: number | null
+  scoring_type: string
   exercises: Exercise[]
 }
 
