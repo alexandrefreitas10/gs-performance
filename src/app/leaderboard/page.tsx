@@ -62,6 +62,8 @@ export default function LeaderboardPage() {
   const [selectedWorkout, setSelectedWorkout] = useState<number | null>(null)
   const [selectedPart, setSelectedPart] = useState<number | null>(null)
   const [genderFilter, setGenderFilter] = useState<'all' | 'M' | 'F'>('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   useEffect(() => {
     fetch('/api/leaderboard')
@@ -76,17 +78,38 @@ export default function LeaderboardPage() {
       })
   }, [])
 
+  const filteredByDate = useMemo(() => {
+    return rows.filter(r => {
+      if (!r.workout_date) return !dateFrom && !dateTo
+      const d = r.workout_date.includes('T') ? r.workout_date.split('T')[0] : r.workout_date
+      if (dateFrom && d < dateFrom) return false
+      if (dateTo && d > dateTo) return false
+      return true
+    })
+  }, [rows, dateFrom, dateTo])
+
   const workouts = useMemo(() => {
     const seen = new Set<number>()
-    return rows.filter(r => { if (seen.has(r.workout_id)) return false; seen.add(r.workout_id); return true })
-  }, [rows])
+    return filteredByDate.filter(r => { if (seen.has(r.workout_id)) return false; seen.add(r.workout_id); return true })
+  }, [filteredByDate])
 
   const parts = useMemo(() => {
     if (!selectedWorkout) return []
-    const partRows = rows.filter(r => r.workout_id === selectedWorkout)
+    const partRows = filteredByDate.filter(r => r.workout_id === selectedWorkout)
     const seen = new Set<number>()
     return partRows.filter(r => { if (seen.has(r.part_id)) return false; seen.add(r.part_id); return true })
-  }, [rows, selectedWorkout])
+  }, [filteredByDate, selectedWorkout])
+
+  useEffect(() => {
+    if (workouts.length > 0 && !workouts.find(w => w.workout_id === selectedWorkout)) {
+      setSelectedWorkout(workouts[0].workout_id)
+      setSelectedPart(filteredByDate.find(r => r.workout_id === workouts[0].workout_id)?.part_id ?? null)
+    }
+    if (workouts.length === 0) {
+      setSelectedWorkout(null)
+      setSelectedPart(null)
+    }
+  }, [workouts])
 
   if (loading) return <main className="max-w-3xl mx-auto px-4 py-8"><p className="text-zinc-500">Carregando...</p></main>
 
@@ -105,6 +128,39 @@ export default function LeaderboardPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-black text-white">Leaderboard</h1>
         <p className="text-zinc-400 text-sm mt-1">Rankings por treino</p>
+      </div>
+
+      {/* Filtro de data */}
+      <div className="flex flex-wrap items-center gap-3 mb-6 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+        <span className="text-zinc-400 text-sm font-semibold shrink-0">Período:</span>
+        <div className="flex flex-wrap gap-3 flex-1">
+          <div className="flex items-center gap-2">
+            <label className="text-zinc-500 text-xs shrink-0">De</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-zinc-500 text-xs shrink-0">Até</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(''); setDateTo('') }}
+              className="text-xs text-zinc-400 hover:text-white transition-colors"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Seletor de treino */}
@@ -165,10 +221,16 @@ export default function LeaderboardPage() {
         ))}
       </div>
 
+      {workouts.length === 0 && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10 text-center mb-6">
+          <p className="text-zinc-500 text-sm">Nenhum resultado no período selecionado.</p>
+        </div>
+      )}
+
       {/* Ranking da parte selecionada */}
       <div className="space-y-6">
         {parts.filter(part => !selectedPart || part.part_id === selectedPart).map(part => {
-          const partRows = rows.filter(r => {
+          const partRows = filteredByDate.filter(r => {
             if (r.part_id !== part.part_id) return false
             if (genderFilter === 'M') return r.athlete_gender === 'M'
             if (genderFilter === 'F') return r.athlete_gender === 'F'
