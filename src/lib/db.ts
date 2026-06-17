@@ -10,7 +10,7 @@ let schemaInitialized = false
 export async function initSchema() {
   if (schemaInitialized) return
   schemaInitialized = true
-  await sql.unsafe(`
+  try { await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       username TEXT NOT NULL UNIQUE,
@@ -81,7 +81,7 @@ export async function initSchema() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
     ALTER TABLE workout_parts ADD COLUMN IF NOT EXISTS scoring_type TEXT DEFAULT '';
-  `)
+  `) } catch (e) { console.error('initSchema error:', e) }
 }
 
 export default sql

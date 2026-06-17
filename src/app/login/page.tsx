@@ -23,15 +23,25 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     try {
-      const result = await signIn('credentials', { username, password, redirect: false })
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 15000)
+      )
+      const result = await Promise.race([
+        signIn('credentials', { username, password, redirect: false }),
+        timeout,
+      ]) as Awaited<ReturnType<typeof signIn>>
       if (result?.error) {
         setError('Usuário ou senha incorretos')
         setLoading(false)
       } else {
         router.push('/dashboard')
       }
-    } catch {
-      setError('Erro ao conectar. Tente novamente.')
+    } catch (e: any) {
+      if (e?.message === 'timeout') {
+        setError('Servidor demorou para responder. Tente novamente.')
+      } else {
+        setError('Erro ao conectar. Tente novamente.')
+      }
       setLoading(false)
     }
   }
