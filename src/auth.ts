@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { findUserByUsername } from '@/lib/users'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {
