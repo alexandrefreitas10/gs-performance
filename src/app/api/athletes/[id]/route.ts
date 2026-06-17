@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { deleteUser, updateUserPassword, updateUserGender } from '@/lib/users'
+import { deleteUser, updateUserPassword, updateUserProfile } from '@/lib/users'
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -21,10 +21,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json()
   if (body.password) {
     await updateUserPassword(Number(id), body.password)
-  } else if (body.gender !== undefined) {
-    await updateUserGender(Number(id), body.gender)
   } else {
-    return NextResponse.json({ error: 'Nenhum campo para atualizar' }, { status: 400 })
+    const { gender, birth_date, email, phone, name } = body
+    await updateUserProfile(Number(id), { gender, birth_date, email, phone, name })
   }
   return NextResponse.json({ ok: true })
 }

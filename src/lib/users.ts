@@ -9,6 +9,9 @@ export interface User {
   is_admin: boolean
   group_id: number | null
   gender: string
+  birth_date: string | null
+  email: string
+  phone: string
   created_at: string
 }
 
@@ -36,12 +39,19 @@ export async function createUser(
   name: string,
   isAdmin = false,
   groupId?: number,
+  extra?: { gender?: string; birth_date?: string; email?: string; phone?: string },
 ): Promise<User> {
   await initSchema()
   const hash = await bcrypt.hash(password, 12)
   const [user] = await sql<User[]>`
-    INSERT INTO users (username, password_hash, name, is_admin, group_id)
-    VALUES (${username}, ${hash}, ${name}, ${isAdmin}, ${groupId ?? null})
+    INSERT INTO users (username, password_hash, name, is_admin, group_id, gender, birth_date, email, phone)
+    VALUES (
+      ${username}, ${hash}, ${name}, ${isAdmin}, ${groupId ?? null},
+      ${extra?.gender ?? ''},
+      ${extra?.birth_date ?? null},
+      ${extra?.email ?? ''},
+      ${extra?.phone ?? ''}
+    )
     RETURNING *
   `
   return user
@@ -50,14 +60,22 @@ export async function createUser(
 export async function listAthletes(): Promise<Omit<User, 'password_hash'>[]> {
   await initSchema()
   return sql<Omit<User, 'password_hash'>[]>`
-    SELECT id, username, name, is_admin, group_id, gender, created_at
+    SELECT id, username, name, is_admin, group_id, gender, birth_date, email, phone, created_at
     FROM users WHERE is_admin = FALSE ORDER BY name
   `
 }
 
-export async function updateUserGender(id: number, gender: string): Promise<void> {
+export async function updateUserProfile(id: number, fields: Partial<Pick<User, 'gender' | 'birth_date' | 'email' | 'phone' | 'name'>>): Promise<void> {
   await initSchema()
-  await sql`UPDATE users SET gender = ${gender} WHERE id = ${id}`
+  await sql`
+    UPDATE users SET
+      gender = COALESCE(${fields.gender ?? null}, gender),
+      birth_date = COALESCE(${fields.birth_date ?? null}, birth_date),
+      email = COALESCE(${fields.email ?? null}, email),
+      phone = COALESCE(${fields.phone ?? null}, phone),
+      name = COALESCE(${fields.name ?? null}, name)
+    WHERE id = ${id}
+  `
 }
 
 export async function updateUserPassword(id: number, password: string): Promise<void> {

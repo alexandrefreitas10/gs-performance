@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { listAthletes, createUser } from '@/lib/users'
+import { listAthletes, createUser, updateUserProfile } from '@/lib/users'
 
 export async function GET() {
   const session = await auth()
@@ -16,12 +16,12 @@ export async function POST(req: NextRequest) {
   if (!session || !(session.user as any).is_admin) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
-  const { username, password, name } = await req.json()
+  const { username, password, name, gender, birth_date, email, phone } = await req.json()
   if (!username || !password || !name) {
     return NextResponse.json({ error: 'Campos obrigatórios: username, password, name' }, { status: 400 })
   }
   try {
-    const user = await createUser(username, password, name, false)
+    const user = await createUser(username, password, name, false, undefined, { gender, birth_date, email, phone })
     return NextResponse.json({ id: user.id, username: user.username, name: user.name }, { status: 201 })
   } catch (e: any) {
     if (e.code === '23505') {
