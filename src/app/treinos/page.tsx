@@ -90,7 +90,8 @@ export default function TreinosPage() {
       body: JSON.stringify({ userIds: [athleteId] }),
     })
     const res = await fetch(`/api/workouts/${workoutId}/assignments`)
-    setAssignees(prev => ({ ...prev, [workoutId]: await res.json() }))
+    const data = await res.json()
+    setAssignees(prev => ({ ...prev, [workoutId]: data }))
   }
 
   async function handleUnassign(workoutId: number, athleteId: number) {
