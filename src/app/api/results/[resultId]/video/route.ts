@@ -33,9 +33,9 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   try {
     await uploadFile(key, buffer, file.type || 'video/mp4')
-  } catch (e) {
+  } catch (e: any) {
     console.error('S3 upload error:', e)
-    return NextResponse.json({ error: 'Falha ao enviar para o armazenamento. Tente novamente.' }, { status: 500 })
+    return NextResponse.json({ error: `S3: ${e?.message ?? e}` }, { status: 500 })
   }
 
   await sql`UPDATE athlete_results SET video_s3_key = ${key}, video_name = ${file.name} WHERE id = ${resultId}`
