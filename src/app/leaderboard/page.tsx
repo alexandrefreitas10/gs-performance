@@ -59,6 +59,7 @@ export default function LeaderboardPage() {
   const [rows, setRows] = useState<Row[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedWorkout, setSelectedWorkout] = useState<number | null>(null)
+  const [selectedPart, setSelectedPart] = useState<number | null>(null)
 
   useEffect(() => {
     fetch('/api/leaderboard')
@@ -66,7 +67,10 @@ export default function LeaderboardPage() {
       .then(d => {
         setRows(d)
         setLoading(false)
-        if (d.length > 0) setSelectedWorkout(d[0].workout_id)
+        if (d.length > 0) {
+          setSelectedWorkout(d[0].workout_id)
+          setSelectedPart(d[0].part_id)
+        }
       })
   }, [])
 
@@ -102,11 +106,15 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Seletor de treino */}
-      <div className="flex gap-2 flex-wrap mb-8">
+      <div className="flex gap-2 flex-wrap mb-4">
         {workouts.map(w => (
           <button
             key={w.workout_id}
-            onClick={() => setSelectedWorkout(w.workout_id)}
+            onClick={() => {
+              setSelectedWorkout(w.workout_id)
+              const firstPart = rows.find(r => r.workout_id === w.workout_id)
+              setSelectedPart(firstPart?.part_id ?? null)
+            }}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
               selectedWorkout === w.workout_id
                 ? 'bg-orange-500 text-white'
@@ -119,9 +127,28 @@ export default function LeaderboardPage() {
         ))}
       </div>
 
-      {/* Rankings por parte */}
+      {/* Seletor de parte */}
+      {parts.length > 1 && (
+        <div className="flex gap-2 flex-wrap mb-8">
+          {parts.map(part => (
+            <button
+              key={part.part_id}
+              onClick={() => setSelectedPart(part.part_id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                selectedPart === part.part_id
+                  ? 'bg-zinc-200 text-zinc-900'
+                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+              }`}
+            >
+              {part.part_title}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Ranking da parte selecionada */}
       <div className="space-y-6">
-        {parts.map(part => {
+        {parts.filter(part => !selectedPart || part.part_id === selectedPart).map(part => {
           const partRows = rows.filter(r => r.part_id === part.part_id)
           const ranked = rankAthletes(partRows, part.scoring_type)
 
