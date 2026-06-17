@@ -20,6 +20,7 @@ export default function Navbar() {
               <Link href="/atletas" className="text-zinc-400 hover:text-white text-sm transition-colors">Atletas</Link>
               <Link href="/treinos" className="text-zinc-400 hover:text-white text-sm transition-colors">Treinos</Link>
               <Link href="/leaderboard" className="text-zinc-400 hover:text-white text-sm transition-colors">Leaderboard</Link>
+              <Link href="/ranking-benchmarks" className="text-zinc-400 hover:text-white text-sm transition-colors">Ranking</Link>
               <Link href="/calendario" className="text-zinc-400 hover:text-white text-sm transition-colors">Calendário</Link>
             </div>
           )}
@@ -29,6 +30,7 @@ export default function Navbar() {
               <Link href="/meus-benchmarks" className="text-zinc-400 hover:text-white text-sm transition-colors">Benchmarks</Link>
               <Link href="/meus-objetivos" className="text-zinc-400 hover:text-white text-sm transition-colors">Objetivos</Link>
               <Link href="/leaderboard" className="text-zinc-400 hover:text-white text-sm transition-colors">Leaderboard</Link>
+              <Link href="/ranking-benchmarks" className="text-zinc-400 hover:text-white text-sm transition-colors">Ranking</Link>
               <Link href="/calendario" className="text-zinc-400 hover:text-white text-sm transition-colors">Calendário</Link>
             </div>
           )}
