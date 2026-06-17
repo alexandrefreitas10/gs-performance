@@ -325,6 +325,45 @@ export default function WorkoutDetailPage() {
               </div>
             )}
 
+            {/* Vídeos dos atletas por parte — admin */}
+            {isAdmin && (() => {
+              const partResults = adminResults.filter(r => r.part_id === part.id)
+              const withVideo = partResults.filter(r => r.video_s3_key)
+              if (withVideo.length === 0) return null
+              return (
+                <div className="border-t border-zinc-800 pt-4 mt-2">
+                  <p className="text-xs font-semibold text-zinc-400 mb-3">📹 Vídeos dos atletas</p>
+                  <div className="space-y-3">
+                    {withVideo.map(r => (
+                      <div key={r.id} className="bg-zinc-800 rounded-xl px-4 py-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white font-semibold text-sm">{r.athlete_name}</span>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleVideoDownload(r.id, 'view')} className="text-xs text-blue-400 hover:text-blue-300 font-semibold">Assistir</button>
+                            <button onClick={() => handleVideoDownload(r.id, 'download')} className="text-xs text-zinc-400 hover:text-white font-semibold">Baixar</button>
+                          </div>
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={feedbackDrafts[r.id] ?? r.admin_feedback ?? ''}
+                          onChange={e => setFeedbackDrafts(prev => ({ ...prev, [r.id]: e.target.value }))}
+                          placeholder="Escreva um feedback sobre o movimento..."
+                          className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder:text-zinc-500"
+                        />
+                        <button
+                          onClick={() => handleFeedbackSave(r.id)}
+                          disabled={savingFeedback[r.id]}
+                          className="mt-1.5 px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg disabled:opacity-50 transition-colors"
+                        >
+                          {savingFeedback[r.id] ? 'Salvando...' : 'Salvar feedback'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* Registro de resultado — atleta */}
             {!isAdmin && (
               <div className="border-t border-zinc-800 pt-4">
@@ -460,33 +499,7 @@ export default function WorkoutDetailPage() {
                 {r.result_value && <p className="text-white text-sm mt-1 font-mono">{r.result_value}</p>}
                 {r.notes && <p className="text-zinc-500 text-xs mt-0.5 italic">{r.notes}</p>}
 
-                {/* Vídeo do atleta */}
-                {r.video_s3_key && (
-                  <div className="mt-2 flex gap-3">
-                    <span className="text-zinc-500 text-xs">📹</span>
-                    <button onClick={() => handleVideoDownload(r.id, 'view')} className="text-xs text-blue-400 hover:text-blue-300 font-semibold">Assistir vídeo</button>
-                    <button onClick={() => handleVideoDownload(r.id, 'download')} className="text-xs text-zinc-400 hover:text-white font-semibold">Baixar</button>
-                  </div>
-                )}
-
-                {/* Feedback do admin */}
-                <div className="mt-3 border-t border-zinc-700 pt-3">
-                  <p className="text-xs text-zinc-500 mb-1">💬 Seu feedback</p>
-                  <textarea
-                    rows={2}
-                    value={feedbackDrafts[r.id] ?? r.admin_feedback ?? ''}
-                    onChange={e => setFeedbackDrafts(prev => ({ ...prev, [r.id]: e.target.value }))}
-                    placeholder="Escreva um feedback sobre o movimento..."
-                    className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder:text-zinc-500"
-                  />
-                  <button
-                    onClick={() => handleFeedbackSave(r.id)}
-                    disabled={savingFeedback[r.id]}
-                    className="mt-1.5 px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg disabled:opacity-50 transition-colors"
-                  >
-                    {savingFeedback[r.id] ? 'Salvando...' : 'Salvar feedback'}
-                  </button>
-                </div>
+                {r.video_s3_key && <span className="text-zinc-500 text-xs mt-1 block">📹 Vídeo enviado</span>}
               </div>
             ))}
           </div>
