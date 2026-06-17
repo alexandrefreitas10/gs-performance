@@ -20,6 +20,7 @@ export default function Navbar() {
               <Link href="/atletas" className="text-zinc-400 hover:text-white text-sm transition-colors">Atletas</Link>
               <Link href="/treinos" className="text-zinc-400 hover:text-white text-sm transition-colors">Treinos</Link>
               <Link href="/leaderboard" className="text-zinc-400 hover:text-white text-sm transition-colors">Leaderboard</Link>
+              <Link href="/calendario" className="text-zinc-400 hover:text-white text-sm transition-colors">Calendário</Link>
             </div>
           )}
           {!isAdmin && (
@@ -27,6 +28,7 @@ export default function Navbar() {
               <Link href="/meus-treinos" className="text-zinc-400 hover:text-white text-sm transition-colors">Meus Treinos</Link>
               <Link href="/meus-benchmarks" className="text-zinc-400 hover:text-white text-sm transition-colors">Benchmarks</Link>
               <Link href="/leaderboard" className="text-zinc-400 hover:text-white text-sm transition-colors">Leaderboard</Link>
+              <Link href="/calendario" className="text-zinc-400 hover:text-white text-sm transition-colors">Calendário</Link>
             </div>
           )}
           <div className="flex items-center gap-3 border-l border-zinc-800 pl-4">
