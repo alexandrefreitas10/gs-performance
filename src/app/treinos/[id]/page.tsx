@@ -116,6 +116,7 @@ export default function WorkoutDetailPage() {
   const [saving, setSaving] = useState<Record<number, boolean>>({})
   const [saved, setSaved] = useState<Record<number, boolean>>({})
   const [uploadingVideo, setUploadingVideo] = useState<Record<number, boolean>>({})
+  const [uploadError, setUploadError] = useState<Record<number, string>>({})
   const [deletingVideo, setDeletingVideo] = useState<Record<number, boolean>>({})
   const [feedbackDrafts, setFeedbackDrafts] = useState<Record<number, string>>({})
   const [savingFeedback, setSavingFeedback] = useState<Record<number, boolean>>({})
@@ -179,11 +180,19 @@ export default function WorkoutDetailPage() {
     const result = myResults[partId]
     if (!result) return
     setUploadingVideo(prev => ({ ...prev, [partId]: true }))
+    setUploadError(prev => ({ ...prev, [partId]: '' }))
     const formData = new FormData()
     formData.append('video', file)
-    const res = await fetch(`/api/results/${result.id}/video`, { method: 'POST', body: formData })
-    if (res.ok) {
-      setMyResults(prev => ({ ...prev, [partId]: { ...prev[partId], video_s3_key: 'uploaded', video_name: file.name } }))
+    try {
+      const res = await fetch(`/api/results/${result.id}/video`, { method: 'POST', body: formData })
+      if (res.ok) {
+        setMyResults(prev => ({ ...prev, [partId]: { ...prev[partId], video_s3_key: 'uploaded', video_name: file.name } }))
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setUploadError(prev => ({ ...prev, [partId]: data.error || 'Erro ao enviar vídeo. Tente novamente.' }))
+      }
+    } catch {
+      setUploadError(prev => ({ ...prev, [partId]: 'Erro de conexão. Verifique sua internet e tente novamente.' }))
     }
     setUploadingVideo(prev => ({ ...prev, [partId]: false }))
   }
@@ -460,10 +469,17 @@ export default function WorkoutDetailPage() {
                         </div>
                       </div>
                     ) : (
-                      <label className={`flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-zinc-700 rounded-xl cursor-pointer hover:border-orange-500 transition-colors ${uploadingVideo[part.id] ? 'opacity-50 pointer-events-none' : ''}`}>
-                        <input type="file" accept="video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleVideoUpload(part.id, f) }} />
-                        <span className="text-zinc-400 text-sm">{uploadingVideo[part.id] ? 'Enviando...' : '+ Enviar vídeo'}</span>
-                      </label>
+                      <>
+                        <label className={`flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${uploadingVideo[part.id] ? 'opacity-50 pointer-events-none border-zinc-700' : uploadError[part.id] ? 'border-red-500' : 'border-zinc-700 hover:border-orange-500'}`}>
+                          <input type="file" accept="video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleVideoUpload(part.id, f) }} />
+                          <span className={`text-sm ${uploadingVideo[part.id] ? 'text-orange-400' : 'text-zinc-400'}`}>
+                            {uploadingVideo[part.id] ? '⏳ Enviando, aguarde...' : '+ Enviar vídeo'}
+                          </span>
+                        </label>
+                        {uploadError[part.id] && (
+                          <p className="text-red-400 text-xs mt-1">{uploadError[part.id]}</p>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
