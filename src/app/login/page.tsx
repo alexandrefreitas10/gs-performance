@@ -1,28 +1,42 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
+  const { data: session, status } = useSession()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      router.push('/dashboard')
+    }
+  }, [session, status, router])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const result = await signIn('credentials', { username, password, redirect: false })
-    if (result?.error) {
-      setError('Usuário ou senha incorretos')
+    try {
+      const result = await signIn('credentials', { username, password, redirect: false })
+      if (result?.error) {
+        setError('Usuário ou senha incorretos')
+        setLoading(false)
+      } else {
+        router.push('/dashboard')
+      }
+    } catch {
+      setError('Erro ao conectar. Tente novamente.')
       setLoading(false)
-    } else {
-      router.push('/dashboard')
     }
   }
+
+  if (status === 'loading') return null
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
