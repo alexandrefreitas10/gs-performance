@@ -34,7 +34,7 @@ export default function LoginPage() {
         setError('Usuário ou senha incorretos')
         setLoading(false)
       } else {
-        router.push('/dashboard')
+        window.location.href = '/dashboard'
       }
     } catch (e: any) {
       if (e?.message === 'timeout') {
