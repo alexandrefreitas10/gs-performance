@@ -1,7 +1,7 @@
 import postgres from 'postgres'
 
 const sql = postgres(process.env.DATABASE_URL!, {
-  ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
+  ssl: 'require',
   max: 10,
 })
 
@@ -76,6 +76,7 @@ export async function initSchema() {
       notes TEXT DEFAULT '',
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+    ALTER TABLE workout_parts ADD COLUMN IF NOT EXISTS scoring_type TEXT DEFAULT '';
   `)
 }
 
