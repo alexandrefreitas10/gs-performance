@@ -117,6 +117,7 @@ export default function WorkoutDetailPage() {
   const [saved, setSaved] = useState<Record<number, boolean>>({})
   const [uploadingVideo, setUploadingVideo] = useState<Record<number, boolean>>({})
   const [uploadError, setUploadError] = useState<Record<number, string>>({})
+  const [uploadSuccess, setUploadSuccess] = useState<Record<number, boolean>>({})
   const [deletingVideo, setDeletingVideo] = useState<Record<number, boolean>>({})
   const [feedbackDrafts, setFeedbackDrafts] = useState<Record<number, string>>({})
   const [savingFeedback, setSavingFeedback] = useState<Record<number, boolean>>({})
@@ -178,20 +179,26 @@ export default function WorkoutDetailPage() {
 
   async function handleVideoUpload(partId: number, file: File) {
     const result = myResults[partId]
-    if (!result) return
+    if (!result?.id) {
+      setUploadError(prev => ({ ...prev, [partId]: 'Salve o resultado antes de enviar o vídeo.' }))
+      return
+    }
     setUploadingVideo(prev => ({ ...prev, [partId]: true }))
     setUploadError(prev => ({ ...prev, [partId]: '' }))
+    setUploadSuccess(prev => ({ ...prev, [partId]: false }))
     const formData = new FormData()
     formData.append('video', file)
     try {
       const res = await fetch(`/api/results/${result.id}/video`, { method: 'POST', body: formData })
       if (res.ok) {
         setMyResults(prev => ({ ...prev, [partId]: { ...prev[partId], video_s3_key: 'uploaded', video_name: file.name } }))
+        setUploadSuccess(prev => ({ ...prev, [partId]: true }))
+        setTimeout(() => setUploadSuccess(prev => ({ ...prev, [partId]: false })), 4000)
       } else {
         const data = await res.json().catch(() => ({}))
-        setUploadError(prev => ({ ...prev, [partId]: data.error || 'Erro ao enviar vídeo. Tente novamente.' }))
+        setUploadError(prev => ({ ...prev, [partId]: data.error || `Erro ${res.status} ao enviar vídeo. Tente novamente.` }))
       }
-    } catch {
+    } catch (e) {
       setUploadError(prev => ({ ...prev, [partId]: 'Erro de conexão. Verifique sua internet e tente novamente.' }))
     }
     setUploadingVideo(prev => ({ ...prev, [partId]: false }))
@@ -470,14 +477,19 @@ export default function WorkoutDetailPage() {
                       </div>
                     ) : (
                       <>
+                        {uploadSuccess[part.id] && (
+                          <div className="mb-2 px-4 py-3 bg-green-500/20 border border-green-500/40 rounded-xl">
+                            <p className="text-green-400 text-sm font-semibold">✓ Vídeo enviado com sucesso!</p>
+                          </div>
+                        )}
                         <label className={`flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${uploadingVideo[part.id] ? 'opacity-50 pointer-events-none border-zinc-700' : uploadError[part.id] ? 'border-red-500' : 'border-zinc-700 hover:border-orange-500'}`}>
                           <input type="file" accept="video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleVideoUpload(part.id, f) }} />
-                          <span className={`text-sm ${uploadingVideo[part.id] ? 'text-orange-400' : 'text-zinc-400'}`}>
+                          <span className={`text-sm font-semibold ${uploadingVideo[part.id] ? 'text-orange-400' : 'text-zinc-400'}`}>
                             {uploadingVideo[part.id] ? '⏳ Enviando, aguarde...' : '+ Enviar vídeo'}
                           </span>
                         </label>
                         {uploadError[part.id] && (
-                          <p className="text-red-400 text-xs mt-1">{uploadError[part.id]}</p>
+                          <p className="text-red-400 text-sm font-semibold mt-2">⚠ {uploadError[part.id]}</p>
                         )}
                       </>
                     )}
