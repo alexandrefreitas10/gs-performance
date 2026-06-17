@@ -89,6 +89,14 @@ export async function initSchema() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS end_date DATE;
+    CREATE TABLE IF NOT EXISTS goals (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type TEXT NOT NULL CHECK (type IN ('curto_prazo', 'longo_prazo')),
+      description TEXT NOT NULL,
+      completed BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
     ALTER TABLE workout_parts ADD COLUMN IF NOT EXISTS scoring_type TEXT DEFAULT '';
     ALTER TABLE benchmarks ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';
     DO $$ BEGIN

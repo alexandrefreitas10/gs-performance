@@ -27,6 +27,7 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link href="/meus-treinos" className="text-zinc-400 hover:text-white text-sm transition-colors">Meus Treinos</Link>
               <Link href="/meus-benchmarks" className="text-zinc-400 hover:text-white text-sm transition-colors">Benchmarks</Link>
+              <Link href="/meus-objetivos" className="text-zinc-400 hover:text-white text-sm transition-colors">Objetivos</Link>
               <Link href="/leaderboard" className="text-zinc-400 hover:text-white text-sm transition-colors">Leaderboard</Link>
               <Link href="/calendario" className="text-zinc-400 hover:text-white text-sm transition-colors">Calendário</Link>
             </div>

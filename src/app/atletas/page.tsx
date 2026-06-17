@@ -128,6 +128,12 @@ export default function AtletasPage() {
                     Benchmarks
                   </button>
                   <button
+                    onClick={() => router.push(`/atletas/${a.id}/objetivos`)}
+                    className="px-3 py-1.5 text-xs font-semibold text-orange-400 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+                  >
+                    Objetivos
+                  </button>
+                  <button
                     onClick={() => { setResetId(a.id); setNewPassword('') }}
                     className="px-3 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
                   >
