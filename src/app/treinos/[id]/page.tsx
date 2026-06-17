@@ -81,7 +81,10 @@ const RPE_LABELS: Record<number, string> = {
 
 function formatDate(d: string | null) {
   if (!d) return null
-  return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+  const dateStr = d.includes('T') ? d : d + 'T12:00:00'
+  const parsed = new Date(dateStr)
+  if (isNaN(parsed.getTime())) return null
+  return parsed.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 export default function WorkoutDetailPage() {
