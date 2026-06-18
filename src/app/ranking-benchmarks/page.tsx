@@ -67,9 +67,14 @@ export default function RankingBenchmarksPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-black text-white">Ranking de Benchmarks</h1>
-        <p className="text-zinc-400 text-sm mt-1">Comparativo entre atletas por movimento</p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-white">Ranking de Benchmarks</h1>
+          <p className="text-zinc-400 text-sm mt-1">Comparativo entre atletas por movimento</p>
+        </div>
+        <span className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs font-bold rounded-lg shrink-0 mt-1">
+          Cargas em lbs
+        </span>
       </div>
 
       {/* Categorias */}
