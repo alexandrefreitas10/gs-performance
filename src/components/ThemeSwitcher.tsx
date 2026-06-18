@@ -9,25 +9,49 @@ const THEMES = [
   { id: 'roxo',    label: 'Roxo',    color: '#8b5cf6' },
 ]
 
+const FONTS = [
+  { id: 'geist',    label: 'Geist',    sample: 'Aa' },
+  { id: 'inter',    label: 'Inter',    sample: 'Aa' },
+  { id: 'rajdhani', label: 'Rajdhani', sample: 'Aa' },
+  { id: 'oswald',   label: 'Oswald',   sample: 'Aa' },
+]
+
+const FONT_VARS: Record<string, string> = {
+  geist:    'var(--font-geist, sans-serif)',
+  inter:    'var(--font-inter, sans-serif)',
+  rajdhani: 'var(--font-rajdhani, sans-serif)',
+  oswald:   'var(--font-oswald, sans-serif)',
+}
+
 export function ThemeSwitcher() {
   const { data: session } = useSession()
-  const [current, setCurrent] = useState('laranja')
+  const [currentTheme, setCurrentTheme] = useState('laranja')
+  const [currentFont, setCurrentFont] = useState('geist')
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem('gs_theme') || 'laranja'
-    setCurrent(saved)
+    setCurrentTheme(localStorage.getItem('gs_theme') || 'laranja')
+    setCurrentFont(localStorage.getItem('gs_font') || 'geist')
   }, [])
 
   function applyTheme(id: string) {
-    setCurrent(id)
+    setCurrentTheme(id)
     localStorage.setItem('gs_theme', id)
     if (id === 'laranja') {
       document.documentElement.removeAttribute('data-theme')
     } else {
       document.documentElement.setAttribute('data-theme', id)
     }
-    setOpen(false)
+  }
+
+  function applyFont(id: string) {
+    setCurrentFont(id)
+    localStorage.setItem('gs_font', id)
+    if (id === 'geist') {
+      document.documentElement.removeAttribute('data-font')
+    } else {
+      document.documentElement.setAttribute('data-font', id)
+    }
   }
 
   if (!session) return null
@@ -35,29 +59,50 @@ export function ThemeSwitcher() {
   return (
     <div className="fixed bottom-5 right-4 z-50">
       {open && (
-        <div className="mb-3 bg-zinc-900 border border-zinc-700 rounded-2xl p-3 shadow-xl min-w-[140px]">
-          <p className="text-zinc-500 text-xs font-semibold mb-2 px-1">Tema</p>
-          <div className="space-y-1">
+        <div className="mb-3 bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-xl w-44">
+
+          {/* Cores */}
+          <p className="text-zinc-500 text-xs font-semibold mb-2">Cor</p>
+          <div className="space-y-1 mb-4">
             {THEMES.map(t => (
               <button
                 key={t.id}
                 onClick={() => applyTheme(t.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                  current === t.id ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  currentTheme === t.id ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                 }`}
               >
                 <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ background: t.color }} />
                 {t.label}
-                {current === t.id && <span className="ml-auto text-orange-500 text-xs">✓</span>}
+                {currentTheme === t.id && <span className="ml-auto text-orange-500 text-xs">✓</span>}
               </button>
             ))}
           </div>
+
+          {/* Fontes */}
+          <p className="text-zinc-500 text-xs font-semibold mb-2">Fonte</p>
+          <div className="space-y-1">
+            {FONTS.map(f => (
+              <button
+                key={f.id}
+                onClick={() => applyFont(f.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  currentFont === f.id ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                }`}
+              >
+                <span className="shrink-0 text-base leading-none" style={{ fontFamily: FONT_VARS[f.id] }}>{f.sample}</span>
+                <span style={{ fontFamily: FONT_VARS[f.id] }}>{f.label}</span>
+                {currentFont === f.id && <span className="ml-auto text-orange-500 text-xs">✓</span>}
+              </button>
+            ))}
+          </div>
+
         </div>
       )}
       <button
         onClick={() => setOpen(v => !v)}
         className="w-11 h-11 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center text-lg shadow-lg transition-colors"
-        title="Trocar tema"
+        title="Aparência"
       >
         🎨
       </button>

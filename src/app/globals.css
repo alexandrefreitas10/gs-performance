@@ -22,9 +22,14 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-active, var(--font-geist, Arial, sans-serif));
   overflow-x: hidden;
 }
+
+/* ─── Fontes ─── */
+[data-font="inter"]    { --font-active: var(--font-inter); }
+[data-font="rajdhani"] { --font-active: var(--font-rajdhani); }
+[data-font="oswald"]   { --font-active: var(--font-oswald); }
 
 /* ─── Tema Azul ─── */
 [data-theme="azul"] {
