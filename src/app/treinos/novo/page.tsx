@@ -164,12 +164,9 @@ export default function NovoTreinoPage() {
                 >
                   <option value="">Selecionar...</option>
                   <option value="aquecimento">Aquecimento</option>
-                  <option value="forca">Força</option>
-                  <option value="wod">WOD</option>
                   <option value="amrap">AMRAP</option>
                   <option value="emom">EMOM</option>
                   <option value="fortime">For Time</option>
-                  <option value="alongamento">Alongamento</option>
                   <option value="outro">Outro</option>
                 </select>
               </div>
