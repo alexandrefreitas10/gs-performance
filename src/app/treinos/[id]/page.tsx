@@ -13,6 +13,14 @@ interface Exercise {
   notes: string
 }
 
+interface ExerciseDraft {
+  name: string; sets: string; reps: string; load_suggested: string; notes: string
+}
+interface PartDraft {
+  title: string; type: string; description: string; time_cap: string; scoring_type: string
+  exercises: ExerciseDraft[]
+}
+
 interface Part {
   id: number
   title: string
@@ -123,6 +131,11 @@ export default function WorkoutDetailPage() {
   const [feedbackDrafts, setFeedbackDrafts] = useState<Record<number, string>>({})
   const [savingFeedback, setSavingFeedback] = useState<Record<number, boolean>>({})
 
+  // Part edit state (admin)
+  const [editingPartId, setEditingPartId] = useState<number | null>(null)
+  const [partDraft, setPartDraft] = useState<PartDraft | null>(null)
+  const [savingPart, setSavingPart] = useState(false)
+
   useEffect(() => {
     fetch(`/api/workouts/${id}`)
       .then(r => r.json())
@@ -231,6 +244,55 @@ export default function WorkoutDetailPage() {
     setSavingFeedback(prev => ({ ...prev, [resultId]: false }))
   }
 
+  function startEditPart(part: Part) {
+    setEditingPartId(part.id)
+    setPartDraft({
+      title: part.title,
+      type: part.type || '',
+      description: part.description || '',
+      time_cap: part.time_cap ? String(part.time_cap) : '',
+      scoring_type: part.scoring_type || '',
+      exercises: part.exercises.length > 0
+        ? part.exercises.map(e => ({ name: e.name, sets: e.sets ? String(e.sets) : '', reps: e.reps || '', load_suggested: e.load_suggested || '', notes: e.notes || '' }))
+        : [{ name: '', sets: '', reps: '', load_suggested: '', notes: '' }],
+    })
+  }
+
+  async function saveEditPart(partId: number) {
+    if (!partDraft) return
+    setSavingPart(true)
+    await fetch(`/api/workouts/${id}/parts/${partId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...partDraft,
+        time_cap: partDraft.time_cap ? Number(partDraft.time_cap) : null,
+        exercises: partDraft.exercises.map(e => ({ ...e, sets: e.sets ? Number(e.sets) : null })),
+      }),
+    })
+    const updated = await fetch(`/api/workouts/${id}`).then(r => r.json())
+    setWorkout(updated)
+    setEditingPartId(null)
+    setPartDraft(null)
+    setSavingPart(false)
+  }
+
+  function updateDraft(field: keyof PartDraft, value: string) {
+    setPartDraft(prev => prev ? { ...prev, [field]: value } : null)
+  }
+
+  function updateExDraft(ei: number, field: keyof ExerciseDraft, value: string) {
+    setPartDraft(prev => !prev ? null : { ...prev, exercises: prev.exercises.map((e, i) => i === ei ? { ...e, [field]: value } : e) })
+  }
+
+  function addExDraft() {
+    setPartDraft(prev => !prev ? null : { ...prev, exercises: [...prev.exercises, { name: '', sets: '', reps: '', load_suggested: '', notes: '' }] })
+  }
+
+  function removeExDraft(ei: number) {
+    setPartDraft(prev => !prev ? null : { ...prev, exercises: prev.exercises.filter((_, i) => i !== ei) })
+  }
+
   async function handlePartAssign(partId: number) {
     const userIds = partSelected[partId] ?? []
     if (userIds.length === 0) return
@@ -274,11 +336,98 @@ export default function WorkoutDetailPage() {
       <div className="space-y-6">
         {workout.parts.map((part, pi) => (
           <div key={part.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+
+            {/* MODO EDIÇÃO */}
+            {isAdmin && editingPartId === part.id && partDraft ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-bold">Editando Parte {pi + 1}</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setEditingPartId(null); setPartDraft(null) }} className="text-zinc-400 hover:text-white text-xs font-semibold">Cancelar</button>
+                    <button onClick={() => saveEditPart(part.id)} disabled={savingPart} className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold rounded-lg text-xs transition-colors">
+                      {savingPart ? 'Salvando...' : 'Salvar'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-zinc-400 block mb-1">Nome da parte *</label>
+                    <input value={partDraft.title} onChange={e => updateDraft('title', e.target.value)} className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-400 block mb-1">Tipo</label>
+                    <select value={partDraft.type} onChange={e => updateDraft('type', e.target.value)} className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                      <option value="">Selecionar...</option>
+                      <option value="aquecimento">Aquecimento</option>
+                      <option value="amrap">AMRAP</option>
+                      <option value="emom">EMOM</option>
+                      <option value="fortime">For Time</option>
+                      <option value="outro">Outro</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">Critério de ranking</label>
+                  <div className="flex gap-2">
+                    {[{ value: 'menor_tempo', label: '⏱ Menor tempo' }, { value: 'max_reps', label: '🔁 Máx. reps' }, { value: 'maior_carga', label: '🏋️ Maior carga' }].map(opt => (
+                      <button key={opt.value} type="button"
+                        onClick={() => updateDraft('scoring_type', partDraft.scoring_type === opt.value ? '' : opt.value)}
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${partDraft.scoring_type === opt.value ? 'bg-orange-500 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="col-span-2">
+                    <label className="text-xs text-zinc-400 block mb-1">Descrição / Instruções</label>
+                    <textarea value={partDraft.description} onChange={e => updateDraft('description', e.target.value)} rows={2} className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-400 block mb-1">Time cap (min)</label>
+                    <input type="number" value={partDraft.time_cap} onChange={e => updateDraft('time_cap', e.target.value)} placeholder="Ex: 20" className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-2">Exercícios</label>
+                  <div className="space-y-3">
+                    {partDraft.exercises.map((ex, ei) => (
+                      <div key={ei} className="bg-zinc-800 rounded-xl p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-400 text-xs font-semibold">Exercício {ei + 1}</span>
+                          {partDraft.exercises.length > 1 && (
+                            <button type="button" onClick={() => removeExDraft(ei)} className="text-red-400 hover:text-red-300 text-xs">Remover</button>
+                          )}
+                        </div>
+                        <input value={ex.name} onChange={e => updateExDraft(ei, 'name', e.target.value)} placeholder="Nome do exercício *" className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                        <div className="grid grid-cols-3 gap-2">
+                          <input value={ex.sets} onChange={e => updateExDraft(ei, 'sets', e.target.value)} type="number" placeholder="Séries" className="px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                          <input value={ex.reps} onChange={e => updateExDraft(ei, 'reps', e.target.value)} placeholder="Reps" className="px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                          <input value={ex.load_suggested} onChange={e => updateExDraft(ei, 'load_suggested', e.target.value)} placeholder="Carga" className="px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                        </div>
+                        <input value={ex.notes} onChange={e => updateExDraft(ei, 'notes', e.target.value)} placeholder="Observações" className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" onClick={addExDraft} className="mt-2 text-orange-400 hover:text-orange-300 text-sm font-semibold">+ Adicionar exercício</button>
+                </div>
+              </div>
+            ) : (
+
+            /* MODO VISUALIZAÇÃO */
+            <>
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-zinc-500 text-xs font-semibold">Parte {pi + 1}</span>
                 {part.type && <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs font-bold rounded-full">{TYPE_LABELS[part.type] ?? part.type}</span>}
                 {part.time_cap && <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 text-xs rounded-full">{part.time_cap} min</span>}
+                {isAdmin && (
+                  <button onClick={() => startEditPart(part)} className="ml-auto text-zinc-500 hover:text-orange-400 text-xs font-semibold transition-colors">✏️ Editar</button>
+                )}
               </div>
               <h2 className="text-white font-bold text-lg">{part.title}</h2>
             </div>
@@ -561,6 +710,8 @@ export default function WorkoutDetailPage() {
                   </div>
                 )}
               </div>
+            )}
+            </>
             )}
           </div>
         ))}

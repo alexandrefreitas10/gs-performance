@@ -128,6 +128,31 @@ export async function createWorkout(input: CreateWorkoutInput): Promise<Workout>
   return (await getWorkout(workout.id))!
 }
 
+export async function updateWorkoutPart(partId: number, data: {
+  title: string
+  type: string
+  description: string
+  time_cap: number | null
+  scoring_type: string
+  exercises: { name: string; sets: number | null; reps: string; load_suggested: string; notes: string }[]
+}): Promise<void> {
+  await initSchema()
+  await sql`
+    UPDATE workout_parts
+    SET title = ${data.title}, type = ${data.type}, description = ${data.description},
+        time_cap = ${data.time_cap}, scoring_type = ${data.scoring_type}
+    WHERE id = ${partId}
+  `
+  await sql`DELETE FROM exercises WHERE part_id = ${partId}`
+  for (let i = 0; i < data.exercises.length; i++) {
+    const e = data.exercises[i]
+    await sql`
+      INSERT INTO exercises (part_id, sort_order, name, sets, reps, load_suggested, notes)
+      VALUES (${partId}, ${i}, ${e.name}, ${e.sets ?? null}, ${e.reps}, ${e.load_suggested}, ${e.notes})
+    `
+  }
+}
+
 export async function deleteWorkout(id: number): Promise<void> {
   await initSchema()
   await sql`DELETE FROM workouts WHERE id = ${id}`
