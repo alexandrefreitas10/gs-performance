@@ -144,18 +144,32 @@ export default function AtletasPage() {
       {inviteLink && (
         <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 mb-6">
           <p className="text-xs font-semibold text-zinc-400 mb-2">Link de convite gerado (válido por 7 dias):</p>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
             <input
               readOnly
               value={inviteLink}
-              className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 text-xs focus:outline-none"
+              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 text-xs focus:outline-none"
             />
-            <button
-              onClick={copyInvite}
-              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-xs transition-colors"
-            >
-              {inviteCopied ? '✓ Copiado' : 'Copiar'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={copyInvite}
+                className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-xs transition-colors"
+              >
+                {inviteCopied ? '✓ Copiado' : 'Copiar'}
+              </button>
+              <button
+                onClick={() => {
+                  if (typeof navigator !== 'undefined' && navigator.share) {
+                    navigator.share({ title: 'Convite GS Performance', text: 'Use este link para criar sua conta:', url: inviteLink! })
+                  } else {
+                    navigator.clipboard.writeText(inviteLink!)
+                  }
+                }}
+                className="flex-1 py-2 bg-zinc-700 hover:bg-zinc-600 text-white font-bold rounded-lg text-xs transition-colors"
+              >
+                Compartilhar
+              </button>
+            </div>
           </div>
           <p className="text-zinc-500 text-xs mt-2">Envie este link para o atleta. Ele pode ser usado apenas uma vez.</p>
         </div>
