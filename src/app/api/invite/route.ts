@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST() {
   const session = await auth()
-  if (!(session?.user as any)?.is_admin) {
+  if (!session || !(session?.user as any)?.is_admin) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
