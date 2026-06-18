@@ -105,10 +105,10 @@ export default function WorkoutDetailPage() {
   const [loading, setLoading] = useState(true)
 
   // Admin state
-  const [assignees, setAssignees] = useState<Athlete[]>([])
   const [allAthletes, setAllAthletes] = useState<Athlete[]>([])
-  const [showAssign, setShowAssign] = useState(false)
-  const [selected, setSelected] = useState<number[]>([])
+  const [partAssignees, setPartAssignees] = useState<Record<number, Athlete[]>>({})
+  const [showPartAssign, setShowPartAssign] = useState<Record<number, boolean>>({})
+  const [partSelected, setPartSelected] = useState<Record<number, number[]>>({})
   const [adminResults, setAdminResults] = useState<AdminResult[]>([])
 
   // Athlete state
@@ -141,7 +141,7 @@ export default function WorkoutDetailPage() {
       }
     })
     if (isAdmin) {
-      fetch(`/api/workouts/${id}/assignments`).then(r => r.json()).then(setAssignees)
+      fetch(`/api/workouts/${id}/part-assignments`).then(r => r.json()).then(setPartAssignees)
       fetch('/api/athletes').then(r => r.json()).then(setAllAthletes)
     }
   }, [id, isAdmin])
@@ -231,29 +231,28 @@ export default function WorkoutDetailPage() {
     setSavingFeedback(prev => ({ ...prev, [resultId]: false }))
   }
 
-  async function handleAssign() {
-    if (selected.length === 0) return
-    await fetch(`/api/workouts/${id}/assignments`, {
+  async function handlePartAssign(partId: number) {
+    const userIds = partSelected[partId] ?? []
+    if (userIds.length === 0) return
+    await fetch(`/api/parts/${partId}/assignments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userIds: selected }),
+      body: JSON.stringify({ userIds }),
     })
-    const updated = await fetch(`/api/workouts/${id}/assignments`).then(r => r.json())
-    setAssignees(updated)
-    setSelected([])
-    setShowAssign(false)
+    const updated = await fetch(`/api/workouts/${id}/part-assignments`).then(r => r.json())
+    setPartAssignees(updated)
+    setPartSelected(prev => ({ ...prev, [partId]: [] }))
+    setShowPartAssign(prev => ({ ...prev, [partId]: false }))
   }
 
-  async function handleRemoveAssignee(userId: number) {
-    await fetch(`/api/workouts/${id}/assignments`, {
+  async function handlePartRemoveAssignee(partId: number, userId: number) {
+    await fetch(`/api/parts/${partId}/assignments`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
     })
-    setAssignees(prev => prev.filter(a => a.id !== userId))
+    setPartAssignees(prev => ({ ...prev, [partId]: (prev[partId] ?? []).filter(a => a.id !== userId) }))
   }
-
-  const unassigned = allAthletes.filter(a => !assignees.find(x => x.id === a.id))
 
   if (loading) return <main className="max-w-3xl mx-auto px-4 py-8"><p className="text-zinc-500">Carregando...</p></main>
   if (!workout) return <main className="max-w-3xl mx-auto px-4 py-8"><p className="text-zinc-500">Treino não encontrado.</p></main>
@@ -270,44 +269,6 @@ export default function WorkoutDetailPage() {
         {workout.notes && <p className="text-zinc-400 text-sm mt-2">{workout.notes}</p>}
       </div>
 
-      {/* Painel de atribuição (admin) */}
-      {isAdmin && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-white font-bold text-sm">Atletas atribuídos</h2>
-            {unassigned.length > 0 && (
-              <button onClick={() => setShowAssign(v => !v)} className="text-orange-400 hover:text-orange-300 text-xs font-semibold">
-                {showAssign ? 'Cancelar' : '+ Atribuir atletas'}
-              </button>
-            )}
-          </div>
-          {assignees.length === 0 && !showAssign && <p className="text-zinc-600 text-xs">Nenhum atleta atribuído.</p>}
-          {assignees.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {assignees.map(a => (
-                <div key={a.id} className="flex items-center gap-1.5 bg-zinc-800 rounded-full px-3 py-1">
-                  <span className="text-white text-xs font-semibold">{a.name}</span>
-                  <button onClick={() => handleRemoveAssignee(a.id)} className="text-zinc-500 hover:text-red-400 text-xs">×</button>
-                </div>
-              ))}
-            </div>
-          )}
-          {showAssign && (
-            <div className="border-t border-zinc-800 pt-3 space-y-2">
-              {unassigned.map(a => (
-                <label key={a.id} className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={selected.includes(a.id)} onChange={() => setSelected(prev => prev.includes(a.id) ? prev.filter(x => x !== a.id) : [...prev, a.id])} className="accent-orange-500" />
-                  <span className="text-white text-sm">{a.name}</span>
-                  <span className="text-zinc-500 text-xs">@{a.username}</span>
-                </label>
-              ))}
-              <button onClick={handleAssign} disabled={selected.length === 0} className="mt-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-40 text-white font-bold rounded-lg text-xs transition-colors">
-                Confirmar
-              </button>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Partes do treino */}
       <div className="space-y-6">
@@ -321,6 +282,68 @@ export default function WorkoutDetailPage() {
               </div>
               <h2 className="text-white font-bold text-lg">{part.title}</h2>
             </div>
+
+            {/* Atribuição por parte — admin */}
+            {isAdmin && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap gap-1.5 items-center">
+                    {(partAssignees[part.id] ?? []).length === 0 ? (
+                      <span className="text-zinc-600 text-xs">Nenhum atleta atribuído</span>
+                    ) : (
+                      (partAssignees[part.id] ?? []).map(a => (
+                        <div key={a.id} className="flex items-center gap-1 bg-zinc-800 rounded-full px-2.5 py-0.5">
+                          <span className="text-white text-xs">{a.name}</span>
+                          <button onClick={() => handlePartRemoveAssignee(part.id, a.id)} className="text-zinc-500 hover:text-red-400 text-xs leading-none ml-0.5">×</button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowPartAssign(prev => ({ ...prev, [part.id]: !prev[part.id] }))}
+                    className="text-orange-400 hover:text-orange-300 text-xs font-semibold shrink-0 ml-2"
+                  >
+                    {showPartAssign[part.id] ? 'Cancelar' : '👤 Atribuir'}
+                  </button>
+                </div>
+                {showPartAssign[part.id] && (() => {
+                  const assignedIds = (partAssignees[part.id] ?? []).map(a => a.id)
+                  const unassigned = allAthletes.filter(a => !assignedIds.includes(a.id))
+                  return (
+                    <div className="mt-2 border-t border-zinc-800 pt-2 space-y-2">
+                      {unassigned.length === 0 ? (
+                        <p className="text-zinc-600 text-xs">Todos os atletas já foram atribuídos.</p>
+                      ) : (
+                        <>
+                          {unassigned.map(a => (
+                            <label key={a.id} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={(partSelected[part.id] ?? []).includes(a.id)}
+                                onChange={() => setPartSelected(prev => {
+                                  const cur = prev[part.id] ?? []
+                                  return { ...prev, [part.id]: cur.includes(a.id) ? cur.filter(x => x !== a.id) : [...cur, a.id] }
+                                })}
+                                className="accent-orange-500"
+                              />
+                              <span className="text-white text-sm">{a.name}</span>
+                              <span className="text-zinc-500 text-xs">@{a.username}</span>
+                            </label>
+                          ))}
+                          <button
+                            onClick={() => handlePartAssign(part.id)}
+                            disabled={(partSelected[part.id] ?? []).length === 0}
+                            className="mt-1 px-4 py-1.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-40 text-white font-bold rounded-lg text-xs transition-colors"
+                          >
+                            Confirmar
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
 
             {part.description && <p className="text-zinc-400 text-sm mb-4 whitespace-pre-wrap">{part.description}</p>}
 

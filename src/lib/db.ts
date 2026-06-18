@@ -128,6 +128,13 @@ export async function initSchema() {
       expires_at TIMESTAMPTZ NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS workout_part_assignments (
+      id SERIAL PRIMARY KEY,
+      part_id INTEGER NOT NULL REFERENCES workout_parts(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      assigned_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(part_id, user_id)
+    );
   `) } catch (e) { console.error('initSchema error:', e) }
 }
 
