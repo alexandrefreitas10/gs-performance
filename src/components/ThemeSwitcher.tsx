@@ -77,7 +77,7 @@ export function ThemeSwitcher({ fontFamilies }: Props) {
   return (
     <div className="fixed bottom-5 right-4 z-50">
       {open && (
-        <div className="mb-3 bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-xl w-44">
+        <div className="mb-3 bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-xl w-44 max-h-[80vh] overflow-y-auto">
 
           {/* Cores */}
           <p className="text-zinc-500 text-xs font-semibold mb-2">Cor</p>
