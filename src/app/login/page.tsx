@@ -52,7 +52,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-white tracking-tight">GS Performance</h1>
+          <div className="flex justify-center mb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="GS Performance" className="h-24 w-24 object-contain rounded-2xl bg-white p-1.5" />
+          </div>
+          <h1 className="text-3xl font-black text-orange-500 tracking-tight">GS Performance</h1>
           <p className="text-zinc-400 text-sm mt-1">Acesse sua conta</p>
         </div>
         <form onSubmit={handleSubmit} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">

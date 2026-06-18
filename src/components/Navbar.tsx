@@ -30,9 +30,11 @@ export default function Navbar() {
 
   return (
     <nav className="border-b border-zinc-800 bg-zinc-950">
-      <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link href="/dashboard" className="text-orange-500 font-black text-lg tracking-tight shrink-0">
-          GS Performance
+      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+        <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="GS Performance" className="h-10 w-10 object-contain rounded-lg bg-white p-0.5" />
+          <span className="text-orange-500 font-black text-lg tracking-tight">GS Performance</span>
         </Link>
 
         {/* Desktop links */}
