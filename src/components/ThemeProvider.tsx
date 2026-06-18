@@ -12,6 +12,10 @@ export function ThemeProvider({ children, fontFamilies }: Props) {
     if (theme && theme !== 'laranja') {
       document.documentElement.setAttribute('data-theme', theme)
     }
+    const style = localStorage.getItem('gs_style')
+    if (style && style !== 'padrao') {
+      document.documentElement.setAttribute('data-style', style)
+    }
     const font = localStorage.getItem('gs_font')
     if (font && font !== 'geist') {
       const family = fontFamilies[font]

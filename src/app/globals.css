@@ -31,6 +31,43 @@ body {
 [data-font="rajdhani"] { --font-active: var(--font-rajdhani); }
 [data-font="oswald"]   { --font-active: var(--font-oswald); }
 
+/* ─── Estilo: Vidro ─── */
+[data-style="glass"] body {
+  background: radial-gradient(ellipse at top left, #12082a 0%, #030712 65%) fixed !important;
+}
+[data-style="glass"] [class~="bg-zinc-950"] {
+  background-color: rgba(3, 7, 18, 0.45) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+[data-style="glass"] [class~="bg-zinc-900"] {
+  background-color: rgba(9, 9, 11, 0.35) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+[data-style="glass"] [class~="bg-zinc-800"] {
+  background-color: rgba(24, 24, 27, 0.35) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+[data-style="glass"] [class~="border-zinc-800"],
+[data-style="glass"] [class~="border-zinc-700"] {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ─── Estilo: Nítido ─── */
+[data-style="nitido"] [class~="rounded-sm"]  { border-radius: 1px !important; }
+[data-style="nitido"] [class~="rounded-md"]  { border-radius: 2px !important; }
+[data-style="nitido"] [class~="rounded-lg"]  { border-radius: 2px !important; }
+[data-style="nitido"] [class~="rounded-xl"]  { border-radius: 3px !important; }
+[data-style="nitido"] [class~="rounded-2xl"] { border-radius: 4px !important; }
+[data-style="nitido"] [class~="rounded-3xl"] { border-radius: 4px !important; }
+[data-style="nitido"] [class~="rounded"]     { border-radius: 2px !important; }
+[data-style="nitido"] [class~="border-zinc-800"],
+[data-style="nitido"] [class~="border-zinc-700"] {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
 /* ─── Tema Azul ─── */
 [data-theme="azul"] {
   --color-orange-50:  #eff6ff;

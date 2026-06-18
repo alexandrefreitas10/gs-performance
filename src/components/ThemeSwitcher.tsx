@@ -16,6 +16,12 @@ const FONTS = [
   { id: 'oswald',   label: 'Oswald',   sample: 'Aa' },
 ]
 
+const STYLES = [
+  { id: 'padrao', label: 'Padrão',  icon: '▣' },
+  { id: 'glass',  label: 'Vidro',   icon: '◈' },
+  { id: 'nitido', label: 'Nítido',  icon: '◼' },
+]
+
 type Props = {
   fontFamilies: Record<string, string>
 }
@@ -24,11 +30,13 @@ export function ThemeSwitcher({ fontFamilies }: Props) {
   const { data: session } = useSession()
   const [currentTheme, setCurrentTheme] = useState('laranja')
   const [currentFont, setCurrentFont] = useState('geist')
+  const [currentStyle, setCurrentStyle] = useState('padrao')
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     setCurrentTheme(localStorage.getItem('gs_theme') || 'laranja')
     setCurrentFont(localStorage.getItem('gs_font') || 'geist')
+    setCurrentStyle(localStorage.getItem('gs_style') || 'padrao')
   }, [])
 
   function applyTheme(id: string) {
@@ -38,6 +46,16 @@ export function ThemeSwitcher({ fontFamilies }: Props) {
       document.documentElement.removeAttribute('data-theme')
     } else {
       document.documentElement.setAttribute('data-theme', id)
+    }
+  }
+
+  function applyStyle(id: string) {
+    setCurrentStyle(id)
+    localStorage.setItem('gs_style', id)
+    if (id === 'padrao') {
+      document.documentElement.removeAttribute('data-style')
+    } else {
+      document.documentElement.setAttribute('data-style', id)
     }
   }
 
@@ -75,6 +93,24 @@ export function ThemeSwitcher({ fontFamilies }: Props) {
                 <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ background: t.color }} />
                 {t.label}
                 {currentTheme === t.id && <span className="ml-auto text-orange-500 text-xs">✓</span>}
+              </button>
+            ))}
+          </div>
+
+          {/* Estilos */}
+          <p className="text-zinc-500 text-xs font-semibold mb-2">Estilo</p>
+          <div className="space-y-1 mb-4">
+            {STYLES.map(s => (
+              <button
+                key={s.id}
+                onClick={() => applyStyle(s.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  currentStyle === s.id ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                }`}
+              >
+                <span className="shrink-0 text-sm">{s.icon}</span>
+                {s.label}
+                {currentStyle === s.id && <span className="ml-auto text-orange-500 text-xs">✓</span>}
               </button>
             ))}
           </div>
