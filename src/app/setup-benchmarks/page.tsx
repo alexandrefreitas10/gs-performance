@@ -60,23 +60,24 @@ export default function SetupBenchmarksPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-2xl mx-auto px-4 py-10">
-        <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-black text-white">Seus Benchmarks</h1>
-            <p className="text-zinc-400 text-sm mt-1">
-              Preencha seus recordes pessoais. Deixe em branco os que ainda não tem. Você pode editar depois.
-            </p>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-black text-white">Seus Benchmarks</h1>
+          <p className="text-zinc-400 text-sm mt-1">
+            Preencha seus recordes pessoais. Deixe em branco os que ainda não tem. Você pode editar depois.
+          </p>
           {ready && (
-            <div className="flex items-center gap-1 bg-zinc-800 rounded-lg p-1 shrink-0 mt-1">
-              <button
-                onClick={() => handleUnitChange('kg')}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-colors ${unit === 'kg' ? 'bg-orange-500 text-white' : 'text-zinc-400 hover:text-white'}`}
-              >kg</button>
-              <button
-                onClick={() => handleUnitChange('lbs')}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-colors ${unit === 'lbs' ? 'bg-orange-500 text-white' : 'text-zinc-400 hover:text-white'}`}
-              >lbs</button>
+            <div className="flex items-center gap-2 mt-3">
+              <span className="text-xs text-zinc-500">Unidade:</span>
+              <div className="flex items-center gap-1 bg-zinc-800 rounded-lg p-1">
+                <button
+                  onClick={() => handleUnitChange('kg')}
+                  className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${unit === 'kg' ? 'bg-orange-500 text-white' : 'text-zinc-400 hover:text-white'}`}
+                >kg</button>
+                <button
+                  onClick={() => handleUnitChange('lbs')}
+                  className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${unit === 'lbs' ? 'bg-orange-500 text-white' : 'text-zinc-400 hover:text-white'}`}
+                >lbs</button>
+              </div>
             </div>
           )}
         </div>
