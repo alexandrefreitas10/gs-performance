@@ -16,14 +16,11 @@ const FONTS = [
   { id: 'oswald',   label: 'Oswald',   sample: 'Aa' },
 ]
 
-const FONT_VARS: Record<string, string> = {
-  geist:    'var(--font-geist, sans-serif)',
-  inter:    'var(--font-inter, sans-serif)',
-  rajdhani: 'var(--font-rajdhani, sans-serif)',
-  oswald:   'var(--font-oswald, sans-serif)',
+type Props = {
+  fontFamilies: Record<string, string>
 }
 
-export function ThemeSwitcher() {
+export function ThemeSwitcher({ fontFamilies }: Props) {
   const { data: session } = useSession()
   const [currentTheme, setCurrentTheme] = useState('laranja')
   const [currentFont, setCurrentFont] = useState('geist')
@@ -47,10 +44,13 @@ export function ThemeSwitcher() {
   function applyFont(id: string) {
     setCurrentFont(id)
     localStorage.setItem('gs_font', id)
+    console.log('[font] id:', id, 'families:', fontFamilies)
     if (id === 'geist') {
-      document.documentElement.removeAttribute('data-font')
+      document.body.style.removeProperty('font-family')
     } else {
-      document.documentElement.setAttribute('data-font', id)
+      const family = fontFamilies[id]
+      console.log('[font] applying:', family)
+      if (family) document.body.style.fontFamily = family
     }
   }
 
@@ -90,8 +90,8 @@ export function ThemeSwitcher() {
                   currentFont === f.id ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                 }`}
               >
-                <span className="shrink-0 text-base leading-none" style={{ fontFamily: FONT_VARS[f.id] }}>{f.sample}</span>
-                <span style={{ fontFamily: FONT_VARS[f.id] }}>{f.label}</span>
+                <span className="shrink-0 text-base leading-none" style={{ fontFamily: fontFamilies[f.id] }}>{f.sample}</span>
+                <span style={{ fontFamily: fontFamilies[f.id] }}>{f.label}</span>
                 {currentFont === f.id && <span className="ml-auto text-orange-500 text-xs">✓</span>}
               </button>
             ))}

@@ -17,14 +17,25 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const fontFamilies = {
+    geist:    geist.style.fontFamily,
+    inter:    inter.style.fontFamily,
+    rajdhani: rajdhani.style.fontFamily,
+    oswald:   oswald.style.fontFamily,
+  }
+
   return (
-    <html lang="pt-BR">
-      <body className={`${geist.variable} ${inter.variable} ${rajdhani.variable} ${oswald.variable} bg-zinc-950 text-white`}>
+    <html
+      lang="pt-BR"
+      className={`${geist.variable} ${inter.variable} ${rajdhani.variable} ${oswald.variable}`}
+      data-fonts={JSON.stringify(fontFamilies)}
+    >
+      <body className="bg-zinc-950 text-white">
         <SessionProvider>
-          <ThemeProvider>
+          <ThemeProvider fontFamilies={fontFamilies}>
             <Navbar />
             {children}
-            <ThemeSwitcher />
+            <ThemeSwitcher fontFamilies={fontFamilies} />
           </ThemeProvider>
         </SessionProvider>
       </body>

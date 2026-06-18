@@ -1,7 +1,12 @@
 'use client'
 import { useEffect } from 'react'
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+type Props = {
+  children: React.ReactNode
+  fontFamilies: Record<string, string>
+}
+
+export function ThemeProvider({ children, fontFamilies }: Props) {
   useEffect(() => {
     const theme = localStorage.getItem('gs_theme')
     if (theme && theme !== 'laranja') {
@@ -9,7 +14,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
     const font = localStorage.getItem('gs_font')
     if (font && font !== 'geist') {
-      document.documentElement.setAttribute('data-font', font)
+      const family = fontFamilies[font]
+      if (family) document.body.style.fontFamily = family
     }
   }, [])
   return <>{children}</>
