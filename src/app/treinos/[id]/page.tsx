@@ -421,15 +421,18 @@ export default function WorkoutDetailPage() {
             /* MODO VISUALIZAÇÃO */
             <>
             <div className="mb-4">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-zinc-500 text-xs font-semibold">Parte {pi + 1}</span>
-                {part.type && <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs font-bold rounded-full">{TYPE_LABELS[part.type] ?? part.type}</span>}
-                {part.time_cap && <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 text-xs rounded-full">{part.time_cap} min</span>}
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-white font-bold text-lg">
+                  <span className="text-zinc-500 font-semibold text-sm mr-2">Parte {pi + 1}</span>{part.title}
+                </h2>
                 {isAdmin && (
-                  <button onClick={() => startEditPart(part)} className="ml-auto text-zinc-500 hover:text-orange-400 text-xs font-semibold transition-colors">✏️ Editar</button>
+                  <button onClick={() => startEditPart(part)} className="text-zinc-500 hover:text-orange-400 text-xs font-semibold transition-colors shrink-0 ml-2">✏️ Editar</button>
                 )}
               </div>
-              <h2 className="text-white font-bold text-lg">{part.title}</h2>
+              <div className="flex items-center gap-2">
+                {part.type && <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs font-bold rounded-full">{TYPE_LABELS[part.type] ?? part.type}</span>}
+                {part.time_cap && <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 text-xs rounded-full">{part.time_cap} min</span>}
+              </div>
             </div>
 
             {/* Atribuição por parte — admin */}
