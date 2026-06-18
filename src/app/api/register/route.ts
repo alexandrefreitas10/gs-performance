@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   if (new Date(rows[0].expires_at) < new Date()) return NextResponse.json({ error: 'Este link expirou.' }, { status: 400 })
 
   try {
-    await createUser(username, password, name, false, null, {
+    await createUser(username, password, name, false, undefined, {
       gender: gender || '',
       birth_date: birth_date || null,
       email: email || '',
