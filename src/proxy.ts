@@ -4,6 +4,7 @@ export default function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
   const isLoginPage = pathname === '/login'
   const isSetupPage = pathname.startsWith('/setup')
+  const isRegisterPage = pathname === '/cadastro'
 
   const sessionCookie =
     req.cookies.get('authjs.session-token') ||
@@ -13,7 +14,7 @@ export default function proxy(req: NextRequest) {
 
   const isLoggedIn = !!sessionCookie
 
-  if (!isLoggedIn && !isLoginPage && !isSetupPage) {
+  if (!isLoggedIn && !isLoginPage && !isSetupPage && !isRegisterPage) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
   if (isLoggedIn && isLoginPage) {

@@ -120,6 +120,14 @@ export async function initSchema() {
         ALTER TABLE benchmarks ADD CONSTRAINT benchmarks_user_id_benchmark_name_key UNIQUE (user_id, benchmark_name);
       END IF;
     END $$;
+    CREATE TABLE IF NOT EXISTS invite_tokens (
+      id SERIAL PRIMARY KEY,
+      token TEXT NOT NULL UNIQUE,
+      created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      used_at TIMESTAMPTZ,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `) } catch (e) { console.error('initSchema error:', e) }
 }
 

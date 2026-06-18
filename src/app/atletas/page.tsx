@@ -34,6 +34,9 @@ export default function AtletasPage() {
   const [newPassword, setNewPassword] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
   const [editForm, setEditForm] = useState({ name: '', gender: '', birth_date: '', email: '', phone: '' })
+  const [inviteLink, setInviteLink] = useState<string | null>(null)
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteCopied, setInviteCopied] = useState(false)
 
   async function load() {
     const res = await fetch('/api/athletes')
@@ -43,6 +46,23 @@ export default function AtletasPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  async function handleGenerateInvite() {
+    setInviteLoading(true)
+    setInviteLink(null)
+    setInviteCopied(false)
+    const res = await fetch('/api/invite', { method: 'POST' })
+    const data = await res.json()
+    setInviteLink(data.link)
+    setInviteLoading(false)
+  }
+
+  function copyInvite() {
+    if (!inviteLink) return
+    navigator.clipboard.writeText(inviteLink)
+    setInviteCopied(true)
+    setTimeout(() => setInviteCopied(false), 2000)
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -104,13 +124,42 @@ export default function AtletasPage() {
           <h1 className="text-2xl font-black text-white">Atletas</h1>
           <p className="text-zinc-400 text-sm mt-1">{athletes.length} atleta{athletes.length !== 1 ? 's' : ''} cadastrado{athletes.length !== 1 ? 's' : ''}</p>
         </div>
-        <button
-          onClick={() => { setShowForm(v => !v); setFormError(null) }}
-          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-sm transition-colors"
-        >
-          {showForm ? 'Cancelar' : '+ Novo atleta'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleGenerateInvite}
+            disabled={inviteLoading}
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg text-sm transition-colors disabled:opacity-50"
+          >
+            {inviteLoading ? 'Gerando...' : '🔗 Link de convite'}
+          </button>
+          <button
+            onClick={() => { setShowForm(v => !v); setFormError(null) }}
+            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-sm transition-colors"
+          >
+            {showForm ? 'Cancelar' : '+ Novo atleta'}
+          </button>
+        </div>
       </div>
+
+      {inviteLink && (
+        <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 mb-6">
+          <p className="text-xs font-semibold text-zinc-400 mb-2">Link de convite gerado (válido por 7 dias):</p>
+          <div className="flex gap-2">
+            <input
+              readOnly
+              value={inviteLink}
+              className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 text-xs focus:outline-none"
+            />
+            <button
+              onClick={copyInvite}
+              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-xs transition-colors"
+            >
+              {inviteCopied ? '✓ Copiado' : 'Copiar'}
+            </button>
+          </div>
+          <p className="text-zinc-500 text-xs mt-2">Envie este link para o atleta. Ele pode ser usado apenas uma vez.</p>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleCreate} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6 space-y-4">
