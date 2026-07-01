@@ -144,9 +144,14 @@ export default function TreinosPage() {
           <h1 className="text-2xl font-black text-white">Treinos</h1>
           <p className="text-zinc-400 text-sm mt-1">{filtered.length} treino{filtered.length !== 1 ? 's' : ''}</p>
         </div>
-        <Link href="/treinos/novo" className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-sm transition-colors">
-          + Novo treino
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/treinos/importar" className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-lg text-sm transition-colors">
+            📊 Importar
+          </Link>
+          <Link href="/treinos/novo" className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-sm transition-colors">
+            + Novo treino
+          </Link>
+        </div>
       </div>
 
       {/* Seletor de atleta */}
